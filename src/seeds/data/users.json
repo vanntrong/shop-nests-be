@@ -1,0 +1,138 @@
+{
+  "users": [
+    {
+      "firstName": "Trong",
+      "lastName": "Vo",
+      "email": "admin@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986844",
+      "roles": ["admin"]
+    },
+    {
+      "firstName": "Maria",
+      "lastName": "Ozawa",
+      "email": "user1@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986763"
+    },
+    {
+      "firstName": "Cristiano",
+      "lastName": "Ronaldo",
+      "email": "user2@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986632"
+    },
+    {
+      "firstName": "Danh",
+      "lastName": "Nguyen",
+      "email": "user3@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986817"
+    },
+    {
+      "firstName": "Son",
+      "lastName": "Huynh",
+      "email": "user4@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986123"
+    },
+    {
+      "firstName": "Phong",
+      "lastName": "Thoa",
+      "email": "user5@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986844"
+    },
+    {
+      "firstName": "Cuong",
+      "lastName": "Nguyen",
+      "email": "user6@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+8437798674"
+    },
+    {
+      "firstName": "Thu",
+      "lastName": "Nguyen",
+      "email": "user7@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986900"
+    },
+    {
+      "firstName": "Huyen",
+      "lastName": "Nguyen",
+      "email": "user8@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+8437798615"
+    },
+    {
+      "firstName": "Phuong",
+      "lastName": "Tran",
+      "email": "user9@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986145"
+    },
+    {
+      "firstName": "Lam",
+      "lastName": "Vlog",
+      "email": "user10@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986192"
+    },
+    {
+      "firstName": "Vy",
+      "lastName": "Nguyen",
+      "email": "user11@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986754"
+    },
+    {
+      "firstName": "An",
+      "lastName": "Huynh",
+      "email": "user12@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986843"
+    },
+    {
+      "firstName": "Tu",
+      "lastName": "Nguyen",
+      "email": "user13@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986822"
+    },
+    {
+      "firstName": "Tat",
+      "lastName": "Vo",
+      "email": "user14@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986911"
+    },
+    {
+      "firstName": "Deo",
+      "lastName": "Phan",
+      "email": "user15@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986113"
+    },
+    {
+      "firstName": "Hung",
+      "lastName": "Vo",
+      "email": "user16@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+8437798654"
+    },
+    {
+      "firstName": "Allen",
+      "lastName": "Davison",
+      "email": "user17@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+84377986942"
+    },
+    {
+      "firstName": "Vy",
+      "lastName": "Tran",
+      "email": "user18@gmail.com",
+      "password": "p4ssw0rd",
+      "phone": "+843779868453"
+    }
+  ]
+}
