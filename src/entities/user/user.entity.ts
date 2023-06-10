@@ -3,10 +3,6 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -18,22 +14,6 @@ export class User {
     unique: true,
   })
   id: string;
-
-  @Column({
-    name: 'first_name',
-  })
-  @Index({
-    fulltext: true,
-  })
-  firstName: string;
-
-  @Column({
-    name: 'last_name',
-  })
-  @Index({
-    fulltext: true,
-  })
-  lastName: string;
 
   @Column({
     unique: true,
@@ -71,11 +51,6 @@ export class User {
     default: 0,
   })
   point: number;
-
-  @Column({
-    default: 0,
-  })
-  coin: number;
 
   @Column({
     default: false,

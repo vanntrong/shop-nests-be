@@ -64,7 +64,7 @@ export class AuthService {
         }),
       };
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -100,9 +100,9 @@ export class AuthService {
         password: this.$hashPassword(body.password),
       });
 
-      const tokenVerifyAccount = this.$signTokenVerifyAccount({
-        email: user.email,
-      });
+      // const tokenVerifyAccount = this.$signTokenVerifyAccount({
+      //   email: user.email,
+      // });
 
       // this.mailService.sendMailRegisterAccount({
       //   email: user.email,

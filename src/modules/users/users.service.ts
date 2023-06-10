@@ -59,7 +59,7 @@ export class UserService {
       const exist = await this.userRepository.findOne({
         where: { id, isDeleted: false },
         ...(isBasicInfo && {
-          select: ['id', 'firstName', 'lastName', 'avatar'],
+          select: ['id', 'avatar'],
         }),
       });
 

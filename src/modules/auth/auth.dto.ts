@@ -20,11 +20,7 @@ export class AuthLoginDto {
 export class AuthRegisterDto {
   @IsString()
   @IsNotEmpty()
-  firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  lastName: string;
+  username: string;
 
   @IsEmail()
   @IsNotEmpty()

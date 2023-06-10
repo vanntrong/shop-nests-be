@@ -4,7 +4,7 @@ env:
   BACKUP_DIR: .
 
 vars:
-  DC_PROJECT: shopeefake-user-service
+  DC_PROJECT: shope-nest
   ENV_FILE: docker.env
 
 dotenv: ['docker.env']
