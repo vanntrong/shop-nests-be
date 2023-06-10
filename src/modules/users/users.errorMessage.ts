@@ -1,6 +1,7 @@
+import { ErrorResponse } from '@/types/common';
 import { HttpStatus } from '@nestjs/common';
 
-export const UserErrorMessage = {
+export const UserErrorMessage: Record<string, ErrorResponse> = {
   user_not_found: {
     message: 'User not found',
     code: HttpStatus.NOT_FOUND,

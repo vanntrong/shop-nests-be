@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './modules/mail/mail.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { UserModule } from './modules/users/users.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UserModule } from './modules/users/users.module';
     MailModule,
     AuthModule,
     UserModule,
+    CategoriesModule,
     UploadModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
