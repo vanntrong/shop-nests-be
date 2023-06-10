@@ -1,7 +1,5 @@
 import {
-  IsBoolean,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -9,14 +7,8 @@ import {
 
 export class UpdateUserDto {
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
-  firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  lastName: string;
+  username: string;
 
   @IsPhoneNumber('VN')
   @IsOptional()
@@ -26,50 +18,4 @@ export class UpdateUserDto {
   @IsNotEmpty()
   @IsOptional()
   avatar: string;
-
-  // @IsBoolean()
-  // @IsOptional()
-  // isVerified: boolean;
-
-  // @IsNumber()
-  // @IsNotEmpty()
-  // @IsOptional()
-  // coin: number;
-
-  // @IsNumber()
-  // @IsNotEmpty()
-  // @IsOptional()
-  // point: number;
-
-  // @IsString({
-  //   each: true,
-  // })
-  // @IsNotEmpty()
-  // @IsOptional()
-  // roles: string[];
-
-  @IsOptional()
-  address: CreateAddressDto[];
-}
-
-export class CreateAddressDto {
-  @IsString()
-  @IsNotEmpty()
-  apartmentNumber: string;
-
-  @IsString()
-  @IsNotEmpty()
-  addressLine: string;
-
-  @IsString()
-  @IsNotEmpty()
-  city: string;
-
-  @IsString()
-  @IsNotEmpty()
-  region: string;
-
-  @IsBoolean()
-  @IsOptional()
-  isDefault: boolean;
 }

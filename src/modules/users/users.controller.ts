@@ -13,10 +13,12 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { Query } from '@nestjs/common/decorators';
-import { CreateAddressDto, UpdateUserDto } from './users.dto';
+import { Query, UseGuards } from '@nestjs/common/decorators';
+import { UpdateUserDto } from './users.dto';
 import { UserErrorMessage } from './users.errorMessage';
 import { UserService } from './users.service';
+import { JwtAuthGuard } from '@/guards/jwt.guard';
+import { User } from '@/decorators';
 
 @Controller('users')
 export class UserController {
@@ -29,14 +31,16 @@ export class UserController {
   }
 
   @Get()
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   getAll(@Query() _query: PaginationDto) {
     const { query, filter } = generateQuery(_query);
     return this.userService.getAll(query, filter);
   }
 
   @Get('me')
-  getMe(@Headers('x-user-id') userId: string) {
-    return this.userService.getById(userId);
+  @UseGuards(JwtAuthGuard)
+  getMe(@User('id') id: string) {
+    return this.userService.getById(id);
   }
 
   @Put(':id')
@@ -51,12 +55,14 @@ export class UserController {
   }
 
   @Get(':id')
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   getById(@Param('id') id: string) {
     return this.userService.getById(id, { isBasicInfo: true });
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   delete(
     @Param('id') id: string,
     @Headers('x-user-id') userId: string,
