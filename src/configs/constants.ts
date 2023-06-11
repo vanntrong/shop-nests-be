@@ -8,4 +8,6 @@ export const constants = {
     pick_street: 'Đường Đỗ Xuân Hợp',
     pick_address: '198/5',
   },
+  PICK_NAME: 'Võ Văn Trọng',
+  PICK_TEL: '+84377986844',
 };

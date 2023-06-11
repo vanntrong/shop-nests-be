@@ -1,7 +1,7 @@
 import axiosInstance from '@/utils/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { Axios } from 'axios';
-import { GetFeeShipDto } from './ship.dto';
+import { CreateShipDto, GetFeeShipDto } from './ship.dto';
 import { FeeShip, FeeShipResponse } from './ship.interface';
 import { constants } from '@/configs/constants';
 import { Result } from '@/types/common';
@@ -44,6 +44,21 @@ export class ShipService {
         data: feeShip.fee,
       };
     } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  async createOrder(body: CreateShipDto) {
+    try {
+      const response = await this.axios.post('/services/shipment/order', {
+        ...body,
+        weight_option: 'gram',
+      });
+
+      return response;
+    } catch (error) {
+      console.log(error);
       this.logger.error(error);
       throw error;
     }

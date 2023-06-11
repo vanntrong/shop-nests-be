@@ -7,6 +7,9 @@ import { OrderProduct } from '@/entities/orderProduct/orderProduct.entity';
 import { Product } from '@/entities/product/product.entity';
 import { OrderErrorMessage } from './orders.errorMessage';
 import { ShipService } from '../ship/ship.service';
+import { CreateShipDto } from '../ship/ship.dto';
+import { constants } from '@/configs/constants';
+import { gamToKg } from '@/utils/convert';
 
 @Injectable()
 export class OrdersService {
@@ -96,9 +99,40 @@ export class OrdersService {
         }),
       );
 
+      const shipOrderBody: CreateShipDto = {
+        products: orderProducts.map((orderProduct, index) => {
+          return {
+            name: orderProduct.product.name,
+            weight: gamToKg(orderProduct.product.weight),
+            quantity: orderProduct.quantity,
+            product_code: index,
+          };
+        }),
+        order: {
+          id: order.id,
+          pick_name: constants.PICK_NAME,
+          ...constants.PICK_ADDRESS,
+          pick_tel: constants.PICK_TEL,
+          tel: order.phone,
+          name: order.name,
+          address: order.address,
+          province: order.province,
+          district: order.district,
+          ward: order.ward,
+          hamlet: 'Khác',
+          is_freeship: 0,
+          pick_money: order.value,
+          value: order.value,
+          transport: 'road',
+          deliver_option: 'none',
+          note: order.note,
+        },
+      };
+
+      const res: any = await this.shipService.createOrder(shipOrderBody);
+
       return {
-        order,
-        orderProducts,
+        ...res,
       };
     } catch (error) {
       this.logger.error(error.message);
