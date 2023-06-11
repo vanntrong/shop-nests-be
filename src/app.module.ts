@@ -15,6 +15,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { ProductsModule } from './modules/products/products.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { ShipModule } from './modules/ship/ship.module';
+import { CartModule } from './modules/cart/cart.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ShipModule } from './modules/ship/ship.module';
     ProductsModule,
     OrdersModule,
     ShipModule,
+    CartModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),

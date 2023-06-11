@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Category } from '../category/category.entity';
 import { OrderProduct } from '../orderProduct/orderProduct.entity';
+import { CartProduct } from '../cartProduct/cartProduct.entity';
 
 @Entity()
 export class Product {
@@ -55,6 +56,9 @@ export class Product {
 
   @OneToMany(() => OrderProduct, (orderProduct) => orderProduct.product)
   orderProducts: OrderProduct[];
+
+  @OneToMany(() => CartProduct, (cartProduct) => cartProduct.product)
+  cartProducts: CartProduct[];
 
   @Column({
     name: 'sale_price',

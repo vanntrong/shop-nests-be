@@ -8,6 +8,6 @@ export class OrdersController {
 
   @Post()
   create(@Body() body: CreateOrderDto) {
-    return body;
+    return this.ordersService.create(body);
   }
 }

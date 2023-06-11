@@ -4,11 +4,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { Cart } from '@/entities/cart/cart.entity';
 
 @Module({
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],
-  imports: [TypeOrmModule.forFeature([User]), JwtModule.register({})],
+  imports: [TypeOrmModule.forFeature([User, Cart]), JwtModule.register({})],
 })
 export class AuthModule {}

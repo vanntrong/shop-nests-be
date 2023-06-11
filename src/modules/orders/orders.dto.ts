@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -25,7 +26,7 @@ export class CreateOrderDto {
 
   @IsString()
   @IsNotEmpty()
-  city: string;
+  province: string;
 
   @IsString()
   @IsNotEmpty()
@@ -37,11 +38,18 @@ export class CreateOrderDto {
 
   @IsString()
   @IsNotEmpty()
+  street: string;
+
+  @IsString()
+  @IsNotEmpty()
   address: string;
 
   @IsString()
   @IsOptional()
   note: string;
+
+  @IsEnum(['xteam', 'none'])
+  deliver_option: string;
 
   @IsArray()
   @ValidateNested({ each: true })

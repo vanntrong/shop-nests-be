@@ -8,26 +8,16 @@ export class OrderProduct {
   id: string;
 
   @Column({
-    type: 'uuid',
-    name: 'order_id',
-  })
-  orderId: string;
-
-  @Column({
-    type: 'uuid',
-    name: 'product_id',
-  })
-  productId: string;
-
-  @Column({
     type: 'int',
     name: 'quantity',
+    nullable: false,
   })
   quantity: number;
 
   @Column({
     type: 'float',
     name: 'price',
+    nullable: false,
   })
   price: number;
 

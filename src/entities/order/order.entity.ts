@@ -27,7 +27,7 @@ export class Order {
   email: string;
 
   @Column()
-  city: string;
+  province: string;
 
   @Column()
   district: string;
@@ -44,7 +44,15 @@ export class Order {
   })
   feeShip: number;
 
-  @Column()
+  @Column({
+    type: 'float',
+    name: 'value',
+  })
+  value: number;
+
+  @Column({
+    nullable: true,
+  })
   note: string;
 
   @OneToMany(() => OrderProduct, (orderProduct) => orderProduct.order)
