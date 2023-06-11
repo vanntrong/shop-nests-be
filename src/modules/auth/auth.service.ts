@@ -1,4 +1,5 @@
 import configuration from '@/configs/configuration';
+import { Cart } from '@/entities/cart/cart.entity';
 import { User } from '@/entities/user/user.entity';
 import { $toUserResponse } from '@/utils/mongo';
 import {
@@ -24,6 +25,7 @@ export class AuthService {
   logger: Logger;
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Cart) private readonly cartRepository: Repository<Cart>,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly mailService: MailService,
@@ -96,10 +98,13 @@ export class AuthService {
 
       const user = await this.userRepository.save({
         ...body,
-        role: 'user',
+        roles: ['admin'],
         password: this.$hashPassword(body.password),
       });
 
+      this.cartRepository.save({
+        user,
+      });
       // const tokenVerifyAccount = this.$signTokenVerifyAccount({
       //   email: user.email,
       // });
@@ -116,7 +121,7 @@ export class AuthService {
         tokens: this.$signTokens({
           email: user.email,
           id: user.id,
-          roles: [user.role],
+          roles: user.roles,
         }),
       };
     } catch (error) {

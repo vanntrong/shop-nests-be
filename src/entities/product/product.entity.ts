@@ -4,10 +4,13 @@ import {
   Entity,
   Index,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Category } from '../category/category.entity';
+import { OrderProduct } from '../orderProduct/orderProduct.entity';
+import { CartProduct } from '../cartProduct/cartProduct.entity';
 
 @Entity()
 export class Product {
@@ -51,6 +54,12 @@ export class Product {
   @ManyToOne(() => Category, (category) => category.products)
   category: Category;
 
+  @OneToMany(() => OrderProduct, (orderProduct) => orderProduct.product)
+  orderProducts: OrderProduct[];
+
+  @OneToMany(() => CartProduct, (cartProduct) => cartProduct.product)
+  cartProducts: CartProduct[];
+
   @Column({
     name: 'sale_price',
     nullable: true,
@@ -62,6 +71,19 @@ export class Product {
     type: 'text',
   })
   images: string[];
+
+  @Column({
+    name: 'weight',
+    type: 'float',
+    default: 0,
+  })
+  weight: number;
+
+  @Column({
+    name: 'inventory',
+    default: 0,
+  })
+  inventory: number;
 
   @Column({
     type: 'timestamp',
