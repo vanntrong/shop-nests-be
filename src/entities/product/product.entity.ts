@@ -4,14 +4,13 @@ import {
   Entity,
   Index,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Product } from '../product/product.entity';
+import { Category } from '../category/category.entity';
 
 @Entity()
-export class Category {
+export class Product {
   @PrimaryGeneratedColumn('uuid')
   @Index({
     unique: true,
@@ -24,11 +23,6 @@ export class Category {
   })
   name: string;
 
-  @Column({
-    name: 'description',
-  })
-  description: string;
-
   @Index({
     fulltext: true,
   })
@@ -38,16 +32,48 @@ export class Category {
   })
   slug: string;
 
-  @ManyToOne(() => Category, (category) => category.subCategories, {
+  @Column({
+    name: 'thumbnail_url',
+  })
+  thumbnailUrl: string;
+
+  @Column({
+    name: 'price',
+    type: 'float',
+  })
+  price: number;
+
+  @Column({
+    name: 'description',
+  })
+  description: string;
+
+  @ManyToOne(() => Category, (category) => category.products)
+  category: Category;
+
+  @Column({
+    name: 'sale_price',
     nullable: true,
   })
-  parentCategory: Category;
+  salePrice: number;
 
-  @OneToMany(() => Category, (category) => category.parentCategory)
-  subCategories: Category[];
+  @Column({
+    array: true,
+    type: 'text',
+  })
+  images: string[];
 
-  @OneToMany(() => Category, (category) => category.products)
-  products: Product[];
+  @Column({
+    type: 'timestamp',
+    name: 'sale_end_at',
+    nullable: true,
+  })
+  saleEndAt: Date;
+
+  @Column({
+    name: 'detail_description',
+  })
+  detailDescription: string;
 
   @Column({
     default: false,
