@@ -57,7 +57,9 @@ export class CategoriesService {
         )
         .getManyAndCount();
 
-      this.logger.log(`Get all users :: ${JSON.stringify({ query, filter })}`);
+      this.logger.log(
+        `Get all categories :: ${JSON.stringify({ query, filter })}`,
+      );
 
       return {
         message: 'Successful',
@@ -161,21 +163,20 @@ export class CategoriesService {
 
   async delete(id: string): Promise<void> {
     try {
-      const isExist = await this.$isExist(id);
+      const category = await this.categoryRepository.findOne({
+        where: { id, isDeleted: false },
+      });
 
-      if (!isExist) {
+      if (!category) {
         throw new HttpException(
           CategoryErrorMessage['category_not_found'],
           HttpStatus.CONFLICT,
         );
       }
 
-      const category = await this.categoryRepository
-        .createQueryBuilder()
-        .update(Category)
-        .set({ isDeleted: true })
-        .where('id = :id', { id })
-        .execute();
+      category.isDeleted = true;
+
+      await this.categoryRepository.save(category);
 
       this.logger.log(`Delete category :: ${JSON.stringify(category)}`);
     } catch (error) {
@@ -185,20 +186,55 @@ export class CategoriesService {
   }
 
   /**
+   * This function retrieves a single category from a repository based on a given slug and returns it
+   * as a Promise.
+   * @param {string} slug - The slug is a string parameter that is used to identify a specific category
+   * in the database. It is a unique identifier for the category and is usually generated based on the
+   * category name or some other relevant information. The function uses this parameter to query the
+   * database and retrieve the category with the matching slug.
+   * @returns This function returns a Promise that resolves to a Result object containing a message and
+   * data. The data is the category object retrieved from the database based on the provided slug, and
+   * the message is "Successful". If the category is not found, it throws an HttpException with a
+   * message and status code. If there is an error during the execution of the function, it logs the
+   * error and rethrows it.
+   */
+  async getOne(slug: string): Promise<Result<Category>> {
+    try {
+      const category = await this.categoryRepository.findOne({
+        where: { slug, isDeleted: false },
+      });
+
+      if (!category) {
+        throw new HttpException(
+          CategoryErrorMessage['category_not_found'],
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      this.logger.log(`Get one category :: ${JSON.stringify(category)}`);
+
+      return {
+        message: 'Successful',
+        data: category,
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  /**
    * This is an asynchronous function that checks if a category exists based on its slug or ID.
-   * @param {string} slugOrId - A string parameter that can either be a category slug or a category ID.
+   * @param {string} slug - A string parameter that can either be a category slug or a category ID.
    * @returns a boolean value indicating whether a category with the given `slugOrId` exists in the
    * database or not. The function first tries to find a category with the given `slugOrId` by checking
    * if there is a category with the given `slug` or `id` and is not deleted. If a category is found,
    * the function returns `true`, otherwise it returns `
    */
-  async $isExist(slugOrId: string) {
+  async $isExist(slug: string) {
     try {
       const count = await this.categoryRepository.count({
-        where: [
-          { slug: slugOrId, isDeleted: false },
-          { id: slugOrId, isDeleted: false },
-        ],
+        where: [{ slug: slug, isDeleted: false }],
       });
 
       return !!count;

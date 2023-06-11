@@ -37,4 +37,5 @@ export type Query = Pick<
 export type Filter = Omit<
   PaginationDto,
   'limit' | 'offset' | 'sortBy' | 'sortOrder'
->;
+> &
+  Record<string, string | number>;

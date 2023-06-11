@@ -27,6 +27,11 @@ export class CategoriesController {
     return this.categoriesService.getAll(query, filter);
   }
 
+  @Get(':slug')
+  getOne(@Param('slug') slug: string) {
+    return this.categoriesService.getOne(slug);
+  }
+
   @Post()
   @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   create(@Body() body: CreateCategoryDto) {
