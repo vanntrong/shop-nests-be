@@ -13,6 +13,8 @@ import { UploadModule } from './modules/upload/upload.module';
 import { UserModule } from './modules/users/users.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ProductsModule } from './modules/products/products.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { ShipModule } from './modules/ship/ship.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { ProductsModule } from './modules/products/products.module';
     CategoriesModule,
     UploadModule,
     ProductsModule,
+    OrdersModule,
+    ShipModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),

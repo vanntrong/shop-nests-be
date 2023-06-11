@@ -32,6 +32,14 @@ export class CreateProductDto {
   @IsNotEmpty()
   name: string;
 
+  @IsNumber()
+  @IsNotEmpty()
+  weight: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  inventory: number;
+
   @IsString()
   @IsNotEmpty()
   detailDescription: string;
@@ -74,6 +82,10 @@ export class UpdateProductDto {
   @IsOptional()
   @IsOptional()
   salePrice: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  weight: number;
 
   @IsString()
   @IsNotEmpty()
