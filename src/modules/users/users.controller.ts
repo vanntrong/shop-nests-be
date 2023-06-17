@@ -14,7 +14,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { Query, UseGuards } from '@nestjs/common/decorators';
-import { UpdateUserDto } from './users.dto';
+import { CreateUserDto, UpdateUserDto } from './users.dto';
 import { UserErrorMessage } from './users.errorMessage';
 import { UserService } from './users.service';
 import { JwtAuthGuard } from '@/guards/jwt.guard';
@@ -31,10 +31,15 @@ export class UserController {
   }
 
   @Get()
-  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   getAll(@Query() _query: PaginationDto) {
     const { query, filter } = generateQuery(_query);
     return this.userService.getAll(query, filter);
+  }
+
+  @Post()
+  create(@Body() body: CreateUserDto) {
+    return this.userService.create(body);
   }
 
   @Get('me')
@@ -44,20 +49,15 @@ export class UserController {
   }
 
   @Put(':id')
-  update(
-    @Body() body: UpdateUserDto,
-    @Param('id') id: string,
-    @Headers('x-user-id') userId: string,
-    @Headers('x-user-roles') userRoles: string[],
-  ) {
-    this.$checkAuthorized(userId, id, userRoles);
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  update(@Body() body: UpdateUserDto, @Param('id') id: string) {
     return this.userService.update(id, body);
   }
 
   @Get(':id')
-  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   getById(@Param('id') id: string) {
-    return this.userService.getById(id, { isBasicInfo: true });
+    return this.userService.getById(id);
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -39,16 +39,19 @@ export class CategoriesService {
   ): Promise<PaginationResult<Category>> {
     try {
       const { offset = 0, limit = 10, sortBy, sortOrder } = query;
-      const { keyword = '', ..._filter } = filter;
+      const { keyword = '', minLevel = 1, maxLevel = 3, ..._filter } = filter;
 
       const [categories, count] = await this.categoryRepository
         .createQueryBuilder('category')
-        .where({ ..._filter, isDeleted: false })
+        .where({ isDeleted: false })
+        .andWhere('category.level >= :minLevel', { minLevel })
+        .andWhere('category.level <= :maxLevel', { maxLevel })
         .andWhere('category.name ILIKE :keyword', { keyword: `%${keyword}%` })
-        .orWhere('category.slug ILIKE :keyword', { keyword: `%${keyword}%` })
-        .where('category.parentCategory IS NULL')
+        .andWhere('category.parentCategory IS NULL')
         .leftJoinAndSelect('category.subCategories', 'children')
         .leftJoinAndSelect('children.subCategories', 'childrensub')
+        .andWhere('children.isDeleted = false')
+        .andWhere('childrensub.isDeleted = false')
         .skip(offset)
         .take(limit)
         .orderBy(
@@ -86,6 +89,7 @@ export class CategoriesService {
    */
   async create(body: CreateCategoryDto) {
     try {
+      console.log({ body });
       const slug = generateSlug(body.name);
       const isCategoryExist = await this.$isExist(slug);
 
@@ -107,7 +111,9 @@ export class CategoriesService {
       const category = await this.categoryRepository.save({
         ...body,
         slug,
+        level: parentCategory ? parentCategory.level + 1 : 1,
       });
+
       category.parentCategory = parentCategory;
       await this.categoryRepository.save(category);
 
@@ -126,9 +132,12 @@ export class CategoriesService {
   `CategoriesService` class that updates an existing category in the database. It takes two
   parameters: `id`, which is the ID of the category to be updated, and `body`, which is an object
   containing the updated data for the category. */
-  async update(id: string, body: UpdateCategoryDto): Promise<Result<Category>> {
+  async update(
+    id: string,
+    { parentId, ...body }: UpdateCategoryDto,
+  ): Promise<Result<Category>> {
     try {
-      const isExist = await this.$isExist(id);
+      const isExist = await this.$isExistById(id);
 
       if (!isExist) {
         throw new HttpException(
@@ -137,12 +146,22 @@ export class CategoriesService {
         );
       }
 
+      let parentCategory: Category;
+
+      if (parentId) {
+        parentCategory = await this.categoryRepository.findOne({
+          where: { id: parentId, isDeleted: false },
+        });
+      }
+
       const slug = generateSlug(body.name);
       const newCategory = await this.categoryRepository
         .createQueryBuilder()
         .update(Category)
         .set({
           ...body,
+          parentCategory,
+          level: parentCategory ? parentCategory.level + 1 : 1,
           slug,
         })
         .where('id = :id', { id })
@@ -173,12 +192,20 @@ export class CategoriesService {
           HttpStatus.CONFLICT,
         );
       }
+      // delete all subcategories
+      await this.categoryRepository
+        .createQueryBuilder('category')
+        .update(Category)
+        .set({
+          isDeleted: true,
+          deletedAt: new Date(),
+        })
+        .where('id = :id', { id: category.id })
+        .orWhere('parentCategory = :id', { id: category.id })
+        .returning('*')
+        .execute();
 
-      category.isDeleted = true;
-
-      await this.categoryRepository.save(category);
-
-      this.logger.log(`Delete category :: ${JSON.stringify(category)}`);
+      this.logger.log(`Delete category :: ${JSON.stringify(category.id)}`);
     } catch (error) {
       this.logger.error(error.message);
       throw error;
@@ -224,6 +251,69 @@ export class CategoriesService {
   }
 
   /**
+   * This function retrieves a single category by its ID and returns it as a Promise with error
+   * handling.
+   * @param {string} id - a string representing the unique identifier of the category to be retrieved.
+   * @returns A Promise that resolves to a Result object containing a message and data property. The
+   * data property contains the category object retrieved from the database, and the message property is
+   * set to 'Successful'. If the category is not found, an HttpException is thrown.
+   */
+  async getOneById(id: string): Promise<Result<Category>> {
+    try {
+      const category = await this.categoryRepository.findOne({
+        where: { id, isDeleted: false },
+        relations: ['parentCategory'],
+      });
+
+      if (!category) {
+        throw new HttpException(
+          CategoryErrorMessage['category_not_found'],
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      this.logger.log(`Get one category :: ${JSON.stringify(category)}`);
+
+      return {
+        message: 'Successful',
+        data: category,
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async getParentCategories(): Promise<Result<Category[]>> {
+    try {
+      const query = await this.categoryRepository
+        .createQueryBuilder('category')
+        .where({ isDeleted: false })
+        .andWhere('category.parentCategory IS NULL')
+        .leftJoinAndSelect('category.subCategories', 'children')
+        .andWhere('children.isDeleted = false')
+        .getMany();
+
+      //flat the array
+      const flat = (categories: Category[]) => {
+        if (!categories || !categories.length) return [];
+        return categories.reduce((acc, category) => {
+          const { subCategories, ...rest } = category;
+          return [...acc, rest, ...flat(subCategories)];
+        }, []);
+      };
+
+      return {
+        message: 'Successful',
+        data: flat(query),
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  /**
    * This is an asynchronous function that checks if a category exists based on its slug or ID.
    * @param {string} slug - A string parameter that can either be a category slug or a category ID.
    * @returns a boolean value indicating whether a category with the given `slugOrId` exists in the
@@ -235,6 +325,18 @@ export class CategoriesService {
     try {
       const count = await this.categoryRepository.count({
         where: [{ slug: slug, isDeleted: false }],
+      });
+
+      return !!count;
+    } catch (error) {
+      this.logger.error(error.message);
+    }
+  }
+
+  async $isExistById(id: string) {
+    try {
+      const count = await this.categoryRepository.count({
+        where: [{ id: id, isDeleted: false }],
       });
 
       return !!count;

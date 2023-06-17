@@ -2,7 +2,7 @@ import { Order } from '@/entities/order/order.entity';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateOrderDto } from './orders.dto';
+import { CreateOrderDto, UpdateShipmentDto } from './orders.dto';
 import { OrderProduct } from '@/entities/orderProduct/orderProduct.entity';
 import { Product } from '@/entities/product/product.entity';
 import { OrderErrorMessage } from './orders.errorMessage';
@@ -10,6 +10,7 @@ import { ShipService } from '../ship/ship.service';
 import { CreateShipDto } from '../ship/ship.dto';
 import { constants } from '@/configs/constants';
 import { gamToKg } from '@/utils/convert';
+import { Filter, Query } from '@/types/common';
 
 @Injectable()
 export class OrdersService {
@@ -133,6 +134,81 @@ export class OrdersService {
 
       return {
         ...res,
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async findAll(_query: Query, _filter: Filter) {
+    try {
+      const { offset = 0, limit = 10, sortBy, sortOrder } = _query;
+      const { keyword = '' } = _filter;
+
+      const [orders, count] = await this.orderRepository
+        .createQueryBuilder('order')
+        .leftJoinAndSelect('order.orderProducts', 'orderProduct')
+        .leftJoinAndSelect('orderProduct.product', 'product')
+        .where('order.name ILIKE :keyword', {
+          keyword: `%${keyword}%`,
+        })
+        .skip(offset)
+        .take(limit)
+        .orderBy(
+          sortBy ? `order.${sortBy}` : 'order.createdAt',
+          sortOrder === 'asc' ? 'ASC' : 'DESC',
+        )
+        .select([
+          'order',
+          'orderProduct',
+          'product.name',
+          'product.thumbnailUrl',
+        ])
+        .getManyAndCount();
+
+      this.logger.log('fetch orders: ', JSON.stringify(_query));
+
+      return {
+        message: 'Successful',
+        offset,
+        limit,
+        total: count,
+        hasNext: count > offset + limit,
+        data: orders,
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+    }
+  }
+
+  async updateShipment(body: UpdateShipmentDto) {
+    try {
+      const { reason_code, reason, status_id, partner_id, fee } = body;
+      const order = await this.orderRepository.findOne({
+        where: {
+          id: partner_id,
+        },
+      });
+
+      if (!order) {
+        throw new HttpException(
+          OrderErrorMessage['order_not_found'],
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      await this.orderRepository.save({
+        ...order,
+        statusId: Number(status_id),
+        reasonCode: reason_code,
+        reason,
+        feeShip: Number(fee),
+        value: order.value - order.feeShip + Number(fee),
+      });
+
+      return {
+        message: 'Successful',
       };
     } catch (error) {
       this.logger.error(error.message);

@@ -41,7 +41,6 @@ export class ProductsService {
     try {
       const { offset = 0, limit = 10, sortBy, sortOrder } = query;
       const { keyword = '', ..._filter } = filter;
-      console.log('filter', filter);
 
       const queryBuilder = this.productRepository
         .createQueryBuilder('product')
@@ -196,8 +195,9 @@ export class ProductsService {
   async update(id: string, body: UpdateProductDto): Promise<Result<Product>> {
     try {
       const { categoryId, ..._body } = body;
+      const slug = generateSlug(_body.name);
       const product = await this.productRepository.findOne({
-        where: { id, isDeleted: false },
+        where: { id, slug, isDeleted: false },
       });
 
       if (!product) {
@@ -213,17 +213,6 @@ export class ProductsService {
         newCategory = await this.categoryRepository.findOne({
           where: { id: categoryId },
         });
-      }
-
-      const slug = generateSlug(_body.name);
-
-      const isExists = await this.$isExists(slug);
-
-      if (isExists) {
-        throw new HttpException(
-          ProductErrorMessage['product_exist'],
-          HttpStatus.CONFLICT,
-        );
       }
 
       const updatedProduct = await this.productRepository.save({
@@ -268,6 +257,37 @@ export class ProductsService {
       });
 
       return;
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async getById(id: string): Promise<Result<Product>> {
+    try {
+      const product = await this.productRepository.findOne({
+        where: [
+          {
+            id,
+            isDeleted: false,
+          },
+        ],
+        relations: ['category'],
+      });
+
+      if (!product) {
+        throw new HttpException(
+          ProductErrorMessage['product_not_found'],
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      this.logger.log(`Get product :: ${JSON.stringify({ id })}`);
+
+      return {
+        message: 'Successful',
+        data: product,
+      };
     } catch (error) {
       this.logger.error(error.message);
       throw error;

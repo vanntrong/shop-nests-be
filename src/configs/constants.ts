@@ -11,3 +11,5 @@ export const constants = {
   PICK_NAME: 'Võ Văn Trọng',
   PICK_TEL: '+84377986844',
 };
+
+export const A_MONTH_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000;

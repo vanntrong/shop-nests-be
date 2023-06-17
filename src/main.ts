@@ -9,6 +9,10 @@ async function bootstrap() {
     logger: ['debug', 'log', 'error'],
   });
 
+  app.enableCors({
+    origin: ['http://localhost:8889'],
+  });
+
   // pipe
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new AllExceptionsFilter());

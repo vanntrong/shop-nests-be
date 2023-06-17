@@ -9,7 +9,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Product } from '../product/product.entity';
-import { OrderProduct } from '../orderProduct/orderProduct.entity';
 
 @Entity()
 export class Category {
@@ -60,6 +59,13 @@ export class Category {
     name: 'created_at',
   })
   createdAt: Date;
+
+  @Column({
+    name: 'level',
+    nullable: true,
+    default: 1,
+  })
+  level: number;
 
   @UpdateDateColumn({
     name: 'updated_at',

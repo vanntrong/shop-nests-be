@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsNumberString,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -64,4 +65,26 @@ export class CreateOrderProductDto {
   @IsNumber()
   @IsNotEmpty()
   quantity: number;
+}
+
+export class UpdateShipmentDto {
+  @IsString()
+  @IsNotEmpty()
+  partner_id: string;
+
+  @IsString()
+  reason: string;
+
+  @IsNumberString({
+    allowNaN: false,
+  })
+  fee: number;
+
+  @IsNumberString({
+    allowNaN: false,
+  })
+  status_id: number;
+
+  @IsString()
+  reason_code: string;
 }

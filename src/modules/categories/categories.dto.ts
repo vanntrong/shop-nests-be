@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateIf,
+} from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
@@ -9,9 +15,9 @@ export class CreateCategoryDto {
   @IsNotEmpty()
   description: string;
 
-  @IsString()
   @IsUUID('4')
   @IsOptional()
+  @ValidateIf((object, value) => value !== undefined)
   parentId: string;
 }
 
@@ -23,4 +29,9 @@ export class UpdateCategoryDto {
   @IsString()
   @IsNotEmpty()
   description: string;
+
+  @IsString()
+  @ValidateIf((object, value) => value !== null)
+  @IsUUID('4')
+  parentId: string;
 }

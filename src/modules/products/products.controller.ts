@@ -34,13 +34,13 @@ export class ProductsController {
   }
 
   @Post()
-  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   async create(@Body() body: CreateProductDto) {
     return this.productService.create(body);
   }
 
   @Put(':id')
-  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   async update(@Param('id') id: string, @Body() body: UpdateProductDto) {
     return this.productService.update(id, body);
   }
@@ -50,5 +50,11 @@ export class ProductsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string) {
     return this.productService.delete(id);
+  }
+
+  @Get('private/:id')
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  async getById(@Param('id') id: string) {
+    return this.productService.getById(id);
   }
 }

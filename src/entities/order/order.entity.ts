@@ -55,6 +55,24 @@ export class Order {
   })
   note: string;
 
+  @Column({
+    name: 'status_id',
+    nullable: true,
+    default: 1,
+  })
+  statusId: number;
+
+  @Column({
+    name: 'reason_code',
+    nullable: true,
+  })
+  reasonCode: string;
+
+  @Column({
+    nullable: true,
+  })
+  reason: string;
+
   @OneToMany(() => OrderProduct, (orderProduct) => orderProduct.order)
   orderProducts: OrderProduct[];
 

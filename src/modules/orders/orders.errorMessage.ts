@@ -8,4 +8,10 @@ export const OrderErrorMessage: Record<string, ErrorResponse> = {
     error: 'order-001',
     detail: "Some product is not available or don't have enough quantity.",
   },
+  order_not_found: {
+    message: 'Order not found',
+    code: HttpStatus.NOT_FOUND,
+    error: 'order-002',
+    detail: 'Order not found',
+  },
 };

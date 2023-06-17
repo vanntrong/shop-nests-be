@@ -32,21 +32,33 @@ export class CategoriesController {
     return this.categoriesService.getOne(slug);
   }
 
+  @Get('private/parent')
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  getParentCategories() {
+    return this.categoriesService.getParentCategories();
+  }
+
+  @Get('private/:id')
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  getOneById(@Param('id') slug: string) {
+    return this.categoriesService.getOneById(slug);
+  }
+
   @Post()
-  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   create(@Body() body: CreateCategoryDto) {
     return this.categoriesService.create(body);
   }
 
   @Put(':id')
-  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   update(@Body() body: UpdateCategoryDto, @Param('id') id: string) {
     return this.categoriesService.update(id, body);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   delete(@Param('id') id: string) {
     return this.categoriesService.delete(id);
   }

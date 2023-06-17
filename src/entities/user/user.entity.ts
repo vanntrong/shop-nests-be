@@ -16,6 +16,12 @@ export class User {
   id: string;
 
   @Column({
+    name: 'name',
+    nullable: true,
+  })
+  name: string;
+
+  @Column({
     unique: true,
   })
   @Index({

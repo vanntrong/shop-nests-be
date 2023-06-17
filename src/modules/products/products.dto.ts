@@ -3,8 +3,10 @@ import {
   IsDateString,
   IsNotEmpty,
   IsNumber,
+  IsNumberString,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -12,7 +14,7 @@ export class CreateProductDto {
   @IsNotEmpty()
   thumbnailUrl: string;
 
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty()
   price: number;
 
@@ -20,11 +22,11 @@ export class CreateProductDto {
   @IsNotEmpty()
   description: string;
 
-  @IsString()
+  @IsUUID('4')
   @IsNotEmpty()
   categoryId: string;
 
-  @IsNumber()
+  @IsNumberString()
   @IsOptional()
   salePrice: number;
 
@@ -32,11 +34,11 @@ export class CreateProductDto {
   @IsNotEmpty()
   name: string;
 
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty()
   weight: number;
 
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty()
   inventory: number;
 
@@ -98,8 +100,7 @@ export class UpdateProductDto {
 
   @IsString()
   @IsOptional()
-  @IsDateString()
-  saleEndAt: Date;
+  saleEndAt: string;
 
   @IsArray()
   @IsString({
