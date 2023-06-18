@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsNotEmpty,
   IsNumber,
@@ -109,4 +110,8 @@ export class UpdateProductDto {
   @IsNotEmpty()
   @IsOptional()
   images: string[];
+
+  @IsBoolean()
+  @IsNotEmpty()
+  isActive: boolean;
 }

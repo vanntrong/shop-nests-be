@@ -3,9 +3,13 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Promotion } from '../promotion/promotion.entity';
+import { Category } from '../category/category.entity';
+import { Product } from '../product/product.entity';
 
 @Entity()
 export class User {
@@ -75,6 +79,15 @@ export class User {
     default: '{user}',
   })
   roles: string[];
+
+  @OneToMany(() => Promotion, (promotion) => promotion.createdBy)
+  promotionsCreated: Promotion[];
+
+  @OneToMany(() => Category, (category) => category.createdBy)
+  categoriesCreated: Category[];
+
+  @OneToMany(() => Product, (product) => product.createdBy)
+  productsCreated: Product[];
 
   @CreateDateColumn({
     name: 'created_at',

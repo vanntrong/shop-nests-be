@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -11,6 +12,7 @@ import {
 import { Category } from '../category/category.entity';
 import { OrderProduct } from '../orderProduct/orderProduct.entity';
 import { CartProduct } from '../cartProduct/cartProduct.entity';
+import { User } from '../user/user.entity';
 
 @Entity()
 export class Product {
@@ -19,6 +21,13 @@ export class Product {
     unique: true,
   })
   id: string;
+
+  @Column({
+    name: 'is_active',
+    default: true,
+    type: 'boolean',
+  })
+  isActive: boolean;
 
   @Column({
     unique: true,
@@ -59,6 +68,14 @@ export class Product {
 
   @OneToMany(() => CartProduct, (cartProduct) => cartProduct.product)
   cartProducts: CartProduct[];
+
+  @ManyToOne(() => User, (user) => user.productsCreated)
+  @JoinColumn({
+    name: 'created_by',
+    referencedColumnName: 'id',
+    foreignKeyConstraintName: 'fk_product_created_by',
+  })
+  createdBy: User;
 
   @Column({
     name: 'sale_price',

@@ -36,3 +36,16 @@ export const generateQuery = (query: PaginationDto) => {
     filter: _filter,
   };
 };
+
+/**
+ * The function pointToMoney converts a given point value to its equivalent money value in Vietnamese
+ * Dong (VND).
+ * @param {number} point - The parameter "point" is a number representing the amount of points that
+ * need to be converted to money.
+ * @returns The function `pointToMoney` takes in a number `point` and returns the equivalent value in
+ * Vietnamese Dong (VND) by multiplying the `point` value by 1000. Therefore, the function returns the
+ * amount of money in VND that corresponds to the input `point` value.
+ */
+export const pointToMoney = (point: number): number => {
+  return point * 1000; // 1 point = 1000 VND
+};

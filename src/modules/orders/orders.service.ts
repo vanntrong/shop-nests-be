@@ -2,7 +2,11 @@ import { Order } from '@/entities/order/order.entity';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateOrderDto, UpdateShipmentDto } from './orders.dto';
+import {
+  CreateOrderDto,
+  CreateOrderProductDto,
+  UpdateShipmentDto,
+} from './orders.dto';
 import { OrderProduct } from '@/entities/orderProduct/orderProduct.entity';
 import { Product } from '@/entities/product/product.entity';
 import { OrderErrorMessage } from './orders.errorMessage';
@@ -11,6 +15,10 @@ import { CreateShipDto } from '../ship/ship.dto';
 import { constants } from '@/configs/constants';
 import { gamToKg } from '@/utils/convert';
 import { Filter, Query } from '@/types/common';
+import { User } from '@/entities/user/user.entity';
+import { pointToMoney } from '@/utils/helper';
+import { Promotion } from '@/entities/promotion/promotion.entity';
+import { PromotionsService } from '../promotions/promotions.service';
 
 @Injectable()
 export class OrdersService {
@@ -26,49 +34,74 @@ export class OrdersService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
 
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+
+    @InjectRepository(Promotion)
+    private readonly promotionRepository: Repository<Promotion>,
+
     private readonly shipService: ShipService,
+    private readonly promotionService: PromotionsService,
   ) {
     this.logger = new Logger(OrdersService.name);
   }
 
-  async create(body: CreateOrderDto) {
+  async create(body: CreateOrderDto, userId?: string) {
     try {
-      const products = await Promise.all(
-        body.products.map((product) =>
-          this.productRepository.findOne({
-            where: {
-              id: product.productId,
-              isDeleted: false,
-            },
-          }),
-        ),
-      );
+      let totalValue = 0; // total value of order
+      let totalWeight = 0; // total weight of order
+      let actualValue = 0; // value after user used point or apply promotion
+      let pointUsed: number | null = null; // point used in order
+      let pointEarned: number | null = null; // point earned after order
+      let isFreeShip = false; // check if order is free ship
+      let promotionUsed: Promotion | null = null; // promotion used in order
 
-      const isProductsNotAvailable = products.some((product, index) => {
-        return !product || body.products[index].quantity > product.inventory;
-      });
-
-      if (isProductsNotAvailable) {
-        throw new HttpException(
-          OrderErrorMessage['product_not_available'],
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      let totalValue = 0;
-      let totalWeight = 0;
+      const { products } = await this.$validateProducts(body.products);
 
       products.forEach((product, index) => {
+        const productPrice = this.$checkProductPrice(product);
+
         totalWeight += product.weight * body.products[index].quantity;
-        totalValue += product.price * body.products[index].quantity;
+        totalValue += productPrice * body.products[index].quantity;
+        actualValue += productPrice * body.products[index].quantity;
       });
+
+      if (userId) {
+        if (body.pointUsed) {
+          const { isValid, reduceMoney } = await this.$checkAndReduceUserPoint(
+            userId,
+            body.pointUsed,
+          );
+
+          if (isValid) {
+            actualValue -= reduceMoney;
+            pointUsed = body.pointUsed;
+          }
+        }
+
+        const userPointEarned = await this.$addPointForUser(userId, totalValue);
+        pointEarned = userPointEarned.pointEarned;
+      }
+
+      if (body.promotionCode) {
+        const promotionReduce = await this.$checkAndReducePromotion(
+          body.promotionCode,
+          totalValue,
+        );
+        promotionUsed = promotionReduce.promotion;
+
+        if (promotionReduce.isFreeShip) {
+          isFreeShip = true;
+        } else {
+          actualValue -= promotionReduce.reduceMoney;
+        }
+      }
 
       const feeShip = await this.shipService.getFee({
         address: body.address,
         district: body.district,
         province: body.province,
         street: body.street,
-        value: totalValue.toString(),
+        value: actualValue.toString(),
         ward: body.ward,
         weight: totalWeight.toString(),
         deliver_option: body.deliver_option,
@@ -84,7 +117,11 @@ export class OrdersService {
         province: body.province,
         ward: body.ward,
         feeShip: feeShip.data.fee,
+        pointUsed,
         value: totalValue,
+        actualValue,
+        pointEarned,
+        promotionUsed,
       });
 
       const orderProducts = await Promise.all(
@@ -121,8 +158,8 @@ export class OrdersService {
           district: order.district,
           ward: order.ward,
           hamlet: 'Khác',
-          is_freeship: 0,
-          pick_money: order.value,
+          is_freeship: isFreeShip ? 1 : 0,
+          pick_money: order.actualValue,
           value: order.value,
           transport: 'road',
           deliver_option: 'none',
@@ -130,10 +167,10 @@ export class OrdersService {
         },
       };
 
-      const res: any = await this.shipService.createOrder(shipOrderBody);
+      // const res: any = await this.shipService.createOrder(shipOrderBody);
 
       return {
-        ...res,
+        ...shipOrderBody,
       };
     } catch (error) {
       this.logger.error(error.message);
@@ -150,10 +187,11 @@ export class OrdersService {
         .createQueryBuilder('order')
         .leftJoinAndSelect('order.orderProducts', 'orderProduct')
         .leftJoinAndSelect('orderProduct.product', 'product')
+        .leftJoinAndSelect('order.promotionUsed', 'promotionUsed')
         .where('order.name ILIKE :keyword', {
           keyword: `%${keyword}%`,
         })
-        .skip(offset)
+        .skip(offset * limit)
         .take(limit)
         .orderBy(
           sortBy ? `order.${sortBy}` : 'order.createdAt',
@@ -164,6 +202,7 @@ export class OrdersService {
           'orderProduct',
           'product.name',
           'product.thumbnailUrl',
+          'promotionUsed.code',
         ])
         .getManyAndCount();
 
@@ -216,6 +255,165 @@ export class OrdersService {
     }
   }
 
+  async $addPointForUser(userId: string, totalValue: number) {
+    try {
+      const userPointEarned = {
+        pointEarned: null,
+      };
+
+      if (totalValue < 2000000) return userPointEarned;
+
+      await this.userRepository.update(
+        {
+          id: userId,
+        },
+        {
+          point: () => `point + ${30}`,
+        },
+      );
+
+      userPointEarned.pointEarned = 30;
+
+      return userPointEarned;
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async $checkAndReduceUserPoint(userId: string, pointUsed: number) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: {
+          id: userId,
+        },
+      });
+
+      if (user.point < pointUsed) {
+        throw new HttpException(
+          OrderErrorMessage['not_enough_point'],
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      await this.userRepository.save({
+        ...user,
+        point: user.point - pointUsed,
+      });
+
+      return {
+        isValid: true,
+        reduceMoney: pointToMoney(pointUsed), // 30 point to 30000vnd
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async $checkAndReducePromotion(promotionCode: string, totalValue: number) {
+    try {
+      const reducePromotion = {
+        isFreeShip: false,
+        reduceMoney: 0,
+        promotion: null,
+      };
+      const promotion = await this.promotionService.getValue(promotionCode);
+      reducePromotion.promotion = promotion.data;
+
+      this.promotionRepository.update(
+        {
+          id: promotion.data.id,
+        },
+        {
+          usedTimes: () => `used_times + ${1}`,
+        },
+      );
+
+      if (promotion.data.discountFor === 'shipping') {
+        reducePromotion.isFreeShip = true;
+
+        return reducePromotion;
+      }
+
+      reducePromotion.reduceMoney = this.calculateDiscountPromotionProduct(
+        promotion.data,
+        totalValue,
+      );
+
+      return reducePromotion;
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  calculateDiscountProductPercent(
+    promotion: Partial<Promotion>,
+    totalValue: number,
+  ) {
+    return Math.min(
+      (promotion.value / 100) * totalValue,
+      promotion.maxValue ?? Infinity,
+    );
+  }
+
+  calculateDiscountProductMoney(
+    promotion: Partial<Promotion>,
+    totalValue: number,
+  ) {
+    return promotion.value;
+  }
+
+  calculateDiscountPromotionProduct(
+    promotion: Partial<Promotion>,
+    totalValue: number,
+  ) {
+    const strategyDiscountPromotion = {
+      percent: this.calculateDiscountProductPercent,
+      money: this.calculateDiscountProductMoney,
+    };
+
+    return strategyDiscountPromotion[promotion.typePromotion](
+      promotion,
+      totalValue,
+    );
+  }
+
+  async $validateProducts(_products: CreateOrderProductDto[]) {
+    try {
+      const products = await Promise.all(
+        _products.map((product) =>
+          this.productRepository.findOne({
+            where: {
+              id: product.productId,
+              isDeleted: false,
+              isActive: true,
+            },
+          }),
+        ),
+      );
+
+      const isProductsNotAvailable = products.some((product, index) => {
+        return !product || _products[index].quantity > product.inventory;
+      });
+
+      if (isProductsNotAvailable) {
+        throw new HttpException(
+          OrderErrorMessage['product_not_available'],
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      return {
+        products,
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
   async $isProductAvailable(productId: string, quantity: number) {
     try {
       const product = await this.productRepository.findOne({
@@ -234,5 +432,15 @@ export class OrdersService {
       this.logger.error(error.message);
       throw error;
     }
+  }
+
+  $checkProductPrice(product: Product) {
+    const { salePrice, saleEndAt } = product;
+
+    if (salePrice && saleEndAt && new Date(saleEndAt) > new Date()) {
+      return salePrice;
+    }
+
+    return product.price;
   }
 }

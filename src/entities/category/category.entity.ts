@@ -3,12 +3,14 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Product } from '../product/product.entity';
+import { User } from '../user/user.entity';
 
 @Entity()
 export class Category {
@@ -17,6 +19,13 @@ export class Category {
     unique: true,
   })
   id: string;
+
+  @Column({
+    name: 'is_active',
+    default: true,
+    type: 'boolean',
+  })
+  isActive: boolean;
 
   @Column({
     unique: true,
@@ -66,6 +75,14 @@ export class Category {
     default: 1,
   })
   level: number;
+
+  @ManyToOne(() => User, (user) => user.categoriesCreated)
+  @JoinColumn({
+    name: 'created_by',
+    referencedColumnName: 'id',
+    foreignKeyConstraintName: 'fk_category_created_by',
+  })
+  createdBy: User;
 
   @UpdateDateColumn({
     name: 'updated_at',

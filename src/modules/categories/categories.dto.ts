@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -31,7 +32,11 @@ export class UpdateCategoryDto {
   description: string;
 
   @IsString()
-  @ValidateIf((object, value) => value !== null)
+  @ValidateIf((object, value) => value !== null && value !== undefined)
   @IsUUID('4')
   parentId: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  isActive: boolean;
 }

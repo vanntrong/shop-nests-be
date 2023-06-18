@@ -2,11 +2,14 @@ import { Category } from '@/entities/category/category.entity';
 import { Filter, PaginationResult, Query, Result } from '@/types/common';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { CreateCategoryDto, UpdateCategoryDto } from './categories.dto';
 import { generateSlug } from '@/utils/slug';
 import { CategoryErrorMessage } from './categories.errorMessage';
 import { omit } from 'lodash';
+import { User } from '@/entities/user/user.entity';
+import { CommonService } from '../common/common.service';
+import { readFile } from 'fs';
 
 @Injectable()
 export class CategoriesService {
@@ -14,6 +17,11 @@ export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+
+    private readonly commonService: CommonService,
   ) {
     this.logger = new Logger(CategoriesService.name);
   }
@@ -36,23 +44,64 @@ export class CategoriesService {
   async getAll(
     query: Query,
     filter: Filter,
+    userId?: string,
   ): Promise<PaginationResult<Category>> {
     try {
+      const isAdminQuery = await this.commonService.$isAdminQuery(userId);
+
       const { offset = 0, limit = 10, sortBy, sortOrder } = query;
       const { keyword = '', minLevel = 1, maxLevel = 3, ..._filter } = filter;
 
       const [categories, count] = await this.categoryRepository
         .createQueryBuilder('category')
-        .where({ isDeleted: false })
+        .where(
+          new Brackets((qb) => {
+            if (!isAdminQuery) {
+              qb.andWhere({
+                isDeleted: false,
+              });
+              qb.andWhere({
+                isActive: true,
+              });
+            }
+          }),
+        )
         .andWhere('category.level >= :minLevel', { minLevel })
         .andWhere('category.level <= :maxLevel', { maxLevel })
         .andWhere('category.name ILIKE :keyword', { keyword: `%${keyword}%` })
         .andWhere('category.parentCategory IS NULL')
         .leftJoinAndSelect('category.subCategories', 'children')
         .leftJoinAndSelect('children.subCategories', 'childrensub')
-        .andWhere('children.isDeleted = false')
-        .andWhere('childrensub.isDeleted = false')
-        .skip(offset)
+        .leftJoinAndSelect('category.createdBy', 'createdBy')
+        .leftJoinAndSelect('children.createdBy', 'childrenCreatedBy')
+        .leftJoinAndSelect('childrensub.createdBy', 'childrensubCreatedBy')
+        .andWhere(
+          new Brackets((qb) => {
+            if (!isAdminQuery) {
+              qb.andWhere('children.isDeleted = false').andWhere(
+                'children.isActive = true',
+              );
+            }
+          }),
+        )
+        .andWhere(
+          new Brackets((qb) => {
+            if (!isAdminQuery) {
+              qb.andWhere('childrensub.isDeleted = false').andWhere(
+                'childrensub.isActive = true',
+              );
+            }
+          }),
+        )
+        .select([
+          'category',
+          'children',
+          'childrensub',
+          'childrenCreatedBy.name',
+          'childrensubCreatedBy.name',
+          'createdBy.name',
+        ])
+        .skip(offset * limit)
         .take(limit)
         .orderBy(
           `category.${sortBy || 'createdAt'}`,
@@ -87,9 +136,8 @@ export class CategoriesService {
    * string "Successful", and the "data" property contains the category object with the
    * "parentCategory" property omitted.
    */
-  async create(body: CreateCategoryDto) {
+  async create(body: CreateCategoryDto, userId: string) {
     try {
-      console.log({ body });
       const slug = generateSlug(body.name);
       const isCategoryExist = await this.$isExist(slug);
 
@@ -108,14 +156,17 @@ export class CategoriesService {
         });
       }
 
+      const createdBy = await this.userRepository.findOne({
+        where: { id: userId, isDeleted: false },
+      });
+
       const category = await this.categoryRepository.save({
         ...body,
         slug,
+        createdBy,
+        parentCategory,
         level: parentCategory ? parentCategory.level + 1 : 1,
       });
-
-      category.parentCategory = parentCategory;
-      await this.categoryRepository.save(category);
 
       this.logger.log(`Create category :: ${JSON.stringify(category)}`);
       return {
@@ -212,6 +263,26 @@ export class CategoriesService {
     }
   }
 
+  async restore(id: string): Promise<void> {
+    try {
+      await this.categoryRepository
+        .createQueryBuilder('category')
+        .update(Category)
+        .set({
+          isDeleted: false,
+          deletedAt: null,
+        })
+        .where('id = :id', { id })
+        .returning('*')
+        .execute();
+
+      return;
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
   /**
    * This function retrieves a single category from a repository based on a given slug and returns it
    * as a Promise.
@@ -228,7 +299,7 @@ export class CategoriesService {
   async getOne(slug: string): Promise<Result<Category>> {
     try {
       const category = await this.categoryRepository.findOne({
-        where: { slug, isDeleted: false },
+        where: { slug, isDeleted: false, isActive: true },
       });
 
       if (!category) {
@@ -261,7 +332,7 @@ export class CategoriesService {
   async getOneById(id: string): Promise<Result<Category>> {
     try {
       const category = await this.categoryRepository.findOne({
-        where: { id, isDeleted: false },
+        where: { id },
         relations: ['parentCategory'],
       });
 
@@ -284,14 +355,32 @@ export class CategoriesService {
     }
   }
 
-  async getParentCategories(): Promise<Result<Category[]>> {
+  async getParentCategories(userId?: string): Promise<Result<Category[]>> {
     try {
+      const isAdminQuery = await this.commonService.$isAdminQuery(userId);
       const query = await this.categoryRepository
         .createQueryBuilder('category')
-        .where({ isDeleted: false })
+        .where(
+          new Brackets((qb) => {
+            if (!isAdminQuery) {
+              qb.andWhere('category.isDeleted = false').andWhere(
+                'category.isActive = true',
+              );
+            }
+          }),
+        )
         .andWhere('category.parentCategory IS NULL')
         .leftJoinAndSelect('category.subCategories', 'children')
-        .andWhere('children.isDeleted = false')
+        .andWhere(
+          new Brackets((qb) => {
+            if (!isAdminQuery) {
+              qb.andWhere('children.isDeleted = false').andWhere(
+                'children.isActive = true',
+              );
+            }
+          }),
+        )
+
         .getMany();
 
       //flat the array
@@ -307,6 +396,90 @@ export class CategoriesService {
         message: 'Successful',
         data: flat(query),
       };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async seed() {
+    try {
+      new Promise((resolve, reject) => {
+        readFile('data.json', 'utf8', async (err, data) => {
+          if (err) {
+            reject(err);
+          }
+
+          const { categories = [] } = JSON.parse(data) || {};
+          await Promise.all(
+            categories.map(async ({ name, description, children }) => {
+              const category = await this.createSeedCategory({
+                name,
+                description,
+                parent: null,
+                level: 1,
+              });
+
+              if (children && children.length > 0) {
+                await Promise.all(
+                  children.map(
+                    async ({ name, description, children: child }) => {
+                      const chilCate = await this.createSeedCategory({
+                        name,
+                        description,
+                        parent: category,
+                        level: 2,
+                      });
+
+                      if (child && child.length > 0) {
+                        await Promise.all(
+                          child.map(async ({ name, description }) => {
+                            return await this.createSeedCategory({
+                              name,
+                              description,
+                              parent: chilCate,
+                              level: 3,
+                            });
+                          }),
+                        );
+                      }
+
+                      return chilCate;
+                    },
+                  ),
+                );
+              }
+
+              return category;
+            }),
+          );
+        });
+      });
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async createSeedCategory({ name, description, level, parent }: any) {
+    try {
+      const slug = generateSlug(name);
+      console.log('seed category:::', name);
+      const user = await this.userRepository.findOne({
+        where: {
+          id: '4487abf4-016a-48ad-9bb4-e4eb179f238e',
+        },
+      });
+      const category = await this.categoryRepository.save({
+        name,
+        description,
+        slug,
+        parentCategory: parent,
+        level,
+        createdBy: user,
+      });
+
+      return category;
     } catch (error) {
       this.logger.error(error.message);
       throw error;

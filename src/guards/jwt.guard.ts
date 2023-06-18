@@ -9,10 +9,12 @@ import { AuthGuard } from '@nestjs/passport';
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('access-token') {
   isPrivateRoute = false;
+  allowUnauthorizedRoute = false;
 
-  constructor({ isPrivateRoute = false } = {}) {
+  constructor({ isPrivateRoute = false, allowUnauthorizedRoute = false } = {}) {
     super();
     this.isPrivateRoute = isPrivateRoute;
+    this.allowUnauthorizedRoute = allowUnauthorizedRoute;
   }
 
   canActivate(context: ExecutionContext) {
@@ -23,6 +25,9 @@ export class JwtAuthGuard extends AuthGuard('access-token') {
 
   handleRequest(err, user) {
     // You can throw an exception based on either "info" or "err" arguments
+    if (this.allowUnauthorizedRoute) {
+      return user;
+    }
 
     if (err || !user) {
       throw err || new UnauthorizedException();

@@ -14,4 +14,10 @@ export const OrderErrorMessage: Record<string, ErrorResponse> = {
     error: 'order-002',
     detail: 'Order not found',
   },
+  not_enough_point: {
+    message: 'Not enough point',
+    code: HttpStatus.BAD_REQUEST,
+    error: 'order-003',
+    detail: 'Not enough point',
+  },
 };

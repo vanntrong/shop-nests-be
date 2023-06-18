@@ -52,6 +52,14 @@ export class CreateOrderDto {
   @IsEnum(['xteam', 'none'])
   deliver_option: string;
 
+  @IsNumber()
+  @IsOptional()
+  pointUsed?: number;
+
+  @IsString()
+  @IsOptional()
+  promotionCode?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   products: CreateOrderProductDto[];

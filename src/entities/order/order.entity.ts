@@ -3,11 +3,15 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { OrderProduct } from '../orderProduct/orderProduct.entity';
+import { Promotion } from '../promotion/promotion.entity';
 
 @Entity()
 export class Order {
@@ -49,6 +53,34 @@ export class Order {
     name: 'value',
   })
   value: number;
+
+  @Column({
+    type: 'float',
+    name: 'actual_value',
+  })
+  actualValue: number;
+
+  @Column({
+    type: 'float',
+    name: 'point_earned',
+    nullable: true,
+  })
+  pointEarned: number;
+
+  @Column({
+    type: 'float',
+    name: 'point_used',
+    nullable: true,
+  })
+  pointUsed: number;
+
+  @ManyToOne(() => Promotion, (promotion) => promotion.ordersUsed)
+  @JoinColumn({
+    name: 'promotion_used',
+    referencedColumnName: 'id',
+    foreignKeyConstraintName: 'fk_order_promotion_used',
+  })
+  promotionUsed: Promotion;
 
   @Column({
     nullable: true,

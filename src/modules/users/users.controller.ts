@@ -13,7 +13,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { Query, UseGuards } from '@nestjs/common/decorators';
+import { Patch, Query, UseGuards } from '@nestjs/common/decorators';
 import { CreateUserDto, UpdateUserDto } from './users.dto';
 import { UserErrorMessage } from './users.errorMessage';
 import { UserService } from './users.service';
@@ -31,7 +31,7 @@ export class UserController {
   }
 
   @Get()
-  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   getAll(@Query() _query: PaginationDto) {
     const { query, filter } = generateQuery(_query);
     return this.userService.getAll(query, filter);
@@ -48,14 +48,27 @@ export class UserController {
     return this.userService.getById(id);
   }
 
+  @Put('me')
+  @UseGuards(JwtAuthGuard)
+  updateMe(@User('id') id: string, @Body() body: UpdateUserDto) {
+    return this.userService.update(id, body);
+  }
+
   @Put(':id')
-  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   update(@Body() body: UpdateUserDto, @Param('id') id: string) {
     return this.userService.update(id, body);
   }
 
+  @Patch(':id/restore')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  restore(@Param('id') id: string) {
+    return this.userService.restore(id);
+  }
+
   @Get(':id')
-  // @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   getById(@Param('id') id: string) {
     return this.userService.getById(id);
   }
@@ -63,12 +76,7 @@ export class UserController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
   @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
-  delete(
-    @Param('id') id: string,
-    @Headers('x-user-id') userId: string,
-    @Headers('x-user-roles') userRoles: string[],
-  ) {
-    this.$checkAuthorized(userId, id, userRoles);
+  delete(@Param('id') id: string) {
     return this.userService.delete(id);
   }
 
