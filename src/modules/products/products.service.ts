@@ -85,19 +85,36 @@ export class ProductsService {
           sortOrder === 'asc' ? 'ASC' : 'DESC',
         );
 
-      if (filter.category) {
+      if (_filter.category) {
         const category = await this.categoryRepository.findOne({
           where: {
-            slug: filter.category as string,
+            slug: _filter.category as string,
             isDeleted: false,
             isActive: true,
           },
         });
 
-        queryBuilder.andWhere((qb) => {
-          qb.where('product.category = :categoryId', {
-            categoryId: category.id,
-          });
+        queryBuilder.andWhere(
+          new Brackets((qb) => {
+            qb.andWhere(
+              'category.id = :categoryId OR category.parentCategory = :categoryId',
+              {
+                categoryId: category.id,
+              },
+            );
+          }),
+        );
+      }
+
+      if (_filter.min_price) {
+        queryBuilder.andWhere('product.price >= :minPrice', {
+          minPrice: _filter.min_price,
+        });
+      }
+
+      if (_filter.max_price) {
+        queryBuilder.andWhere('product.price <= :maxPrice', {
+          maxPrice: _filter.max_price,
         });
       }
 
