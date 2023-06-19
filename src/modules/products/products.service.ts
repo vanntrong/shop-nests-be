@@ -85,10 +85,18 @@ export class ProductsService {
           sortOrder === 'asc' ? 'ASC' : 'DESC',
         );
 
-      if (filter.categoryId) {
+      if (filter.category) {
+        const category = await this.categoryRepository.findOne({
+          where: {
+            slug: filter.category as string,
+            isDeleted: false,
+            isActive: true,
+          },
+        });
+
         queryBuilder.andWhere((qb) => {
           qb.where('product.category = :categoryId', {
-            categoryId: _filter.categoryId,
+            categoryId: category.id,
           });
         });
       }

@@ -70,29 +70,19 @@ export class CategoriesService {
         .andWhere('category.level <= :maxLevel', { maxLevel })
         .andWhere('category.name ILIKE :keyword', { keyword: `%${keyword}%` })
         .andWhere('category.parentCategory IS NULL')
-        .leftJoinAndSelect('category.subCategories', 'children')
-        .leftJoinAndSelect('children.subCategories', 'childrensub')
+        .leftJoinAndSelect(
+          'category.subCategories',
+          'children',
+          'children.isDeleted = false AND children.isActive = true',
+        )
+        .leftJoinAndSelect(
+          'children.subCategories',
+          'childrensub',
+          'childrensub.isDeleted = false AND childrensub.isActive = true',
+        )
         .leftJoinAndSelect('category.createdBy', 'createdBy')
         .leftJoinAndSelect('children.createdBy', 'childrenCreatedBy')
         .leftJoinAndSelect('childrensub.createdBy', 'childrensubCreatedBy')
-        .andWhere(
-          new Brackets((qb) => {
-            if (!isAdminQuery) {
-              qb.andWhere('children.isDeleted = false').andWhere(
-                'children.isActive = true',
-              );
-            }
-          }),
-        )
-        .andWhere(
-          new Brackets((qb) => {
-            if (!isAdminQuery) {
-              qb.andWhere('childrensub.isDeleted = false').andWhere(
-                'childrensub.isActive = true',
-              );
-            }
-          }),
-        )
         .select([
           'category',
           'children',
@@ -300,6 +290,7 @@ export class CategoriesService {
     try {
       const category = await this.categoryRepository.findOne({
         where: { slug, isDeleted: false, isActive: true },
+        relations: ['parentCategory', 'parentCategory.parentCategory'],
       });
 
       if (!category) {
