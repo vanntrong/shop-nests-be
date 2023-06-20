@@ -92,7 +92,7 @@ export class PromotionsService {
           'createdBy.name',
           'createdBy.roles',
         ])
-        .skip(offset * limit)
+        .skip(offset)
         .take(limit)
         .orderBy(
           `promotion.${sortBy || 'createdAt'}`,

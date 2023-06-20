@@ -38,4 +38,4 @@ export type Filter = Omit<
   PaginationDto,
   'limit' | 'offset' | 'sortBy' | 'sortOrder'
 > &
-  Record<string, string | number>;
+  Record<string, string | number | Array<string>>;

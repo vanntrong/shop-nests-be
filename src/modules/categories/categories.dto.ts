@@ -39,4 +39,12 @@ export class UpdateCategoryDto {
   @IsBoolean()
   @IsNotEmpty()
   isActive: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  isAtSidebar: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  isShowAtHome: boolean;
 }

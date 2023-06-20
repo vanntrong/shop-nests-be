@@ -66,10 +66,10 @@ export class CategoriesService {
             }
           }),
         )
+        .andWhere(_filter)
         .andWhere('category.level >= :minLevel', { minLevel })
         .andWhere('category.level <= :maxLevel', { maxLevel })
         .andWhere('category.name ILIKE :keyword', { keyword: `%${keyword}%` })
-        .andWhere('category.parentCategory IS NULL')
         .leftJoinAndSelect(
           'category.subCategories',
           'children',
@@ -83,6 +83,7 @@ export class CategoriesService {
         .leftJoinAndSelect('category.createdBy', 'createdBy')
         .leftJoinAndSelect('children.createdBy', 'childrenCreatedBy')
         .leftJoinAndSelect('childrensub.createdBy', 'childrensubCreatedBy')
+
         .select([
           'category',
           'children',
@@ -91,7 +92,7 @@ export class CategoriesService {
           'childrensubCreatedBy.name',
           'createdBy.name',
         ])
-        .skip(offset * limit)
+        .skip(offset)
         .take(limit)
         .orderBy(
           `category.${sortBy || 'createdAt'}`,

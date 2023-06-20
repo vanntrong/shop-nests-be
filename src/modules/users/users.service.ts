@@ -35,7 +35,7 @@ export class UserService {
             });
           }),
         )
-        .skip(offset * limit)
+        .skip(offset)
         .take(limit)
         .orderBy(
           `user.${sortBy || 'createdAt'}`,

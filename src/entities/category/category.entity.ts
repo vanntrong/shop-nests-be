@@ -28,6 +28,20 @@ export class Category {
   isActive: boolean;
 
   @Column({
+    name: 'is_at_sidebar',
+    default: false,
+    type: 'boolean',
+  })
+  isAtSidebar: boolean;
+
+  @Column({
+    name: 'is_show_at_home',
+    default: false,
+    type: 'boolean',
+  })
+  isShowAtHome: boolean;
+
+  @Column({
     unique: true,
     name: 'name',
   })

@@ -53,6 +53,7 @@ export class ProductsService {
       const queryBuilder = this.productRepository
         .createQueryBuilder('product')
         .leftJoinAndSelect('product.category', 'category')
+        .leftJoin('category.parentCategory', 'parentCategory')
         .leftJoinAndSelect('product.createdBy', 'createdBy')
         .where(
           new Brackets((qb) => {
@@ -77,29 +78,32 @@ export class ProductsService {
               });
           }),
         )
-        .select(['product', 'category', 'createdBy.name'])
-        .skip(offset * limit)
+        .skip(offset)
         .take(limit)
+        .select(['product', 'category', 'createdBy.name'])
         .orderBy(
           `product.${sortBy || 'createdAt'}`,
           sortOrder === 'asc' ? 'ASC' : 'DESC',
         );
 
       if (_filter.category) {
-        const category = await this.categoryRepository.findOne({
-          where: {
-            slug: _filter.category as string,
-            isDeleted: false,
-            isActive: true,
-          },
-        });
+        const categoriesFilter = Array.isArray(_filter.category)
+          ? _filter.category
+          : [_filter.category];
+
+        const categories = await this.categoryRepository
+          .createQueryBuilder('categories')
+          .where('slug IN (:...slugs)', {
+            slugs: categoriesFilter,
+          })
+          .getMany();
 
         queryBuilder.andWhere(
           new Brackets((qb) => {
             qb.andWhere(
-              'category.id = :categoryId OR category.parentCategory = :categoryId',
+              'category.id IN (:...categoryIds) OR category.parentCategory IN (:...categoryIds) OR parentCategory.parentCategory IN (:...categoryIds)',
               {
-                categoryId: category.id,
+                categoryIds: categories.map((category) => category.id),
               },
             );
           }),

@@ -191,7 +191,7 @@ export class OrdersService {
         .where('order.name ILIKE :keyword', {
           keyword: `%${keyword}%`,
         })
-        .skip(offset * limit)
+        .skip(offset)
         .take(limit)
         .orderBy(
           sortBy ? `order.${sortBy}` : 'order.createdAt',
