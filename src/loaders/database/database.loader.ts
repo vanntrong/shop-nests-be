@@ -1,4 +1,5 @@
 import configuration from '@/configs/configuration';
+import { UserSubscriber } from '@/subscribers/user/user.subscriber';
 import { Logger } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -19,6 +20,7 @@ export class DatabaseLoader {
       type: 'postgres',
       entities: ['dist/entities/**/*.entity{.ts,.js}'],
       synchronize: true,
+      subscribers: [UserSubscriber],
     });
   }
 }

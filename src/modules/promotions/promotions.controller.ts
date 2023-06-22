@@ -42,8 +42,8 @@ export class PromotionsController {
   }
 
   @Get(':code/value')
-  getValue(@Param('code') code: string) {
-    return this.promotionsService.getValue(code);
+  getValue(@Param('code') code: string, @Query('total') total: number) {
+    return this.promotionsService.getValue(code, total);
   }
 
   @Delete(':id')

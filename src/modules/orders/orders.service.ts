@@ -19,6 +19,7 @@ import { User } from '@/entities/user/user.entity';
 import { pointToMoney } from '@/utils/helper';
 import { Promotion } from '@/entities/promotion/promotion.entity';
 import { PromotionsService } from '../promotions/promotions.service';
+import { TWO_MILLIONS_VND } from '@/configs/money';
 
 @Injectable()
 export class OrdersService {
@@ -94,6 +95,10 @@ export class OrdersService {
         } else {
           actualValue -= promotionReduce.reduceMoney;
         }
+      }
+
+      if (totalValue > TWO_MILLIONS_VND) {
+        isFreeShip = true;
       }
 
       const feeShip = await this.shipService.getFee({
@@ -261,7 +266,7 @@ export class OrdersService {
         pointEarned: null,
       };
 
-      if (totalValue < 2000000) return userPointEarned;
+      if (totalValue < TWO_MILLIONS_VND) return userPointEarned;
 
       await this.userRepository.update(
         {
@@ -313,12 +318,11 @@ export class OrdersService {
 
   async $checkAndReducePromotion(promotionCode: string, totalValue: number) {
     try {
-      const reducePromotion = {
-        isFreeShip: false,
-        reduceMoney: 0,
-        promotion: null,
-      };
       const promotion = await this.promotionService.getValue(promotionCode);
+      const reducePromotion = this.promotionService.$checkPromotion(
+        promotion.data,
+        totalValue,
+      );
       reducePromotion.promotion = promotion.data;
 
       this.promotionRepository.update(
@@ -330,54 +334,11 @@ export class OrdersService {
         },
       );
 
-      if (promotion.data.discountFor === 'shipping') {
-        reducePromotion.isFreeShip = true;
-
-        return reducePromotion;
-      }
-
-      reducePromotion.reduceMoney = this.calculateDiscountPromotionProduct(
-        promotion.data,
-        totalValue,
-      );
-
       return reducePromotion;
     } catch (error) {
       this.logger.error(error.message);
       throw error;
     }
-  }
-
-  calculateDiscountProductPercent(
-    promotion: Partial<Promotion>,
-    totalValue: number,
-  ) {
-    return Math.min(
-      (promotion.value / 100) * totalValue,
-      promotion.maxValue ?? Infinity,
-    );
-  }
-
-  calculateDiscountProductMoney(
-    promotion: Partial<Promotion>,
-    totalValue: number,
-  ) {
-    return promotion.value;
-  }
-
-  calculateDiscountPromotionProduct(
-    promotion: Partial<Promotion>,
-    totalValue: number,
-  ) {
-    const strategyDiscountPromotion = {
-      percent: this.calculateDiscountProductPercent,
-      money: this.calculateDiscountProductMoney,
-    };
-
-    return strategyDiscountPromotion[promotion.typePromotion](
-      promotion,
-      totalValue,
-    );
   }
 
   async $validateProducts(_products: CreateOrderProductDto[]) {

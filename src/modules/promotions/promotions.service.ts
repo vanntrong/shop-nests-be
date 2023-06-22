@@ -136,7 +136,7 @@ export class PromotionsService {
     }
   }
 
-  async getValue(code: string) {
+  async getValue(code: string, total?: number) {
     try {
       const promotion = await this.promotionRepository.findOne({
         where: {
@@ -181,6 +181,7 @@ export class PromotionsService {
             'isDeleted',
             'deletedAt',
           ]),
+          reduce: total ? this.$checkPromotion(promotion, total) : undefined,
         },
       };
     } catch (error) {
@@ -315,5 +316,58 @@ export class PromotionsService {
       this.logger.error(error.message);
       throw error;
     }
+  }
+
+  $checkPromotion(promotion: Partial<Promotion>, totalValue: number) {
+    const reducePromotion = {
+      isFreeShip: false,
+      reduceMoney: 0,
+      promotion: null,
+    };
+
+    if (promotion.discountFor === 'shipping') {
+      reducePromotion.isFreeShip = true;
+
+      return reducePromotion;
+    }
+
+    reducePromotion.reduceMoney = this.calculateDiscountPromotionProduct(
+      promotion,
+      totalValue,
+    );
+
+    return reducePromotion;
+  }
+
+  calculateDiscountPromotionProduct(
+    promotion: Partial<Promotion>,
+    totalValue: number,
+  ) {
+    const strategyDiscountPromotion = {
+      percent: this.$calculateDiscountProductPercent,
+      money: this.$calculateDiscountProductMoney,
+    };
+
+    return strategyDiscountPromotion[promotion.typePromotion](
+      promotion,
+      totalValue,
+    );
+  }
+
+  $calculateDiscountProductPercent(
+    promotion: Partial<Promotion>,
+    totalValue: number,
+  ) {
+    return Math.min(
+      (promotion.value / 100) * totalValue,
+      promotion.maxValue ?? Infinity,
+    );
+  }
+
+  $calculateDiscountProductMoney(
+    promotion: Partial<Promotion>,
+    totalValue: number,
+  ) {
+    return promotion.value;
   }
 }

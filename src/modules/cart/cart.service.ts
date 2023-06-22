@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { UpdateCartDto } from './cart.dto';
 import { Product } from '@/entities/product/product.entity';
 import { CartProduct } from '@/entities/cartProduct/cartProduct.entity';
-import { omit } from 'lodash';
+import { isNil, isNull, omit, omitBy } from 'lodash';
 
 @Injectable()
 export class CartService {
@@ -41,6 +41,13 @@ export class CartService {
           },
         },
         relations: ['cartProducts', 'cartProducts.product'],
+        order: {
+          cartProducts: {
+            product: {
+              name: 'ASC',
+            },
+          },
+        },
       });
 
       return {
@@ -75,12 +82,6 @@ export class CartService {
         },
       });
 
-      await this.cartProductRepository.delete({
-        cart: {
-          id: cart.id,
-        },
-      });
-
       const products = await Promise.all(
         body.cartProducts.map(async (product) => {
           return this.productRepository.findOne({
@@ -92,7 +93,38 @@ export class CartService {
       );
 
       const cartProducts = await Promise.all(
-        products.map((product, index) => {
+        products.map(async (product, index) => {
+          const quantity = +body.cartProducts[index].quantity;
+          if (quantity === 0) {
+            this.cartProductRepository.delete({
+              cart: {
+                id: cart.id,
+              },
+              product: {
+                id: product.id,
+              },
+            });
+            return null;
+          }
+          const cartProduct = await this.cartProductRepository.findOne({
+            where: {
+              cart: {
+                id: cart.id,
+              },
+              product: {
+                id: product.id,
+              },
+            },
+            relations: ['product'],
+          });
+
+          if (cartProduct) {
+            return this.cartProductRepository.save({
+              ...cartProduct,
+              quantity,
+            });
+          }
+
           return this.cartProductRepository.save({
             cart,
             product,
@@ -105,15 +137,17 @@ export class CartService {
         message: 'Cart updated successfully',
         data: {
           ...omit(cart, 'cartProducts'),
-          products: cartProducts.map((cartProduct) => {
-            return {
-              id: cartProduct.product.id,
-              quantity: cartProduct.quantity,
-              name: cartProduct.product.name,
-              price: cartProduct.product.price,
-              thumbnailUrl: cartProduct.product.thumbnailUrl,
-            };
-          }),
+          products: cartProducts
+            .filter((product) => !isNil(product))
+            .map((cartProduct) => {
+              return {
+                id: cartProduct.product.id,
+                quantity: cartProduct.quantity,
+                name: cartProduct.product.name,
+                price: cartProduct.product.price,
+                thumbnailUrl: cartProduct.product.thumbnailUrl,
+              };
+            }),
         },
       };
     } catch (error) {
@@ -132,6 +166,7 @@ export class CartService {
           name: cartProduct.product.name,
           price: cartProduct.product.price,
           thumbnailUrl: cartProduct.product.thumbnailUrl,
+          slug: cartProduct.product.slug,
         };
       }),
     };

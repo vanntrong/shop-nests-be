@@ -1,0 +1,1 @@
+export const TWO_MILLIONS_VND = 2000000;

@@ -7,9 +7,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Promotion } from '../promotion/promotion.entity';
 import { Category } from '../category/category.entity';
 import { Product } from '../product/product.entity';
+import { Promotion } from '../promotion/promotion.entity';
 
 @Entity()
 export class User {
