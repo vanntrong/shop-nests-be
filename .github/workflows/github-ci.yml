@@ -5,7 +5,7 @@ on:
     branches: ['main']
 
 env:
-  ECR_REGION: aws-region-1
+  ECR_REGION: ap-southeast-1
   DOCKER_BUILDKIT: 1
   DOCKER_CONTAINER_NAME: shop-nests
   DOCKER_PORT: 80
@@ -24,6 +24,7 @@ jobs:
         run: yarn test
 
   build-and-push-image:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
