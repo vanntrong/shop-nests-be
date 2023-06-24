@@ -66,4 +66,4 @@ jobs:
           REPOSITORY: shop-nests
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker run -d -p 80:80 $REGISTRY/$env.ECR_REPOSITORY:$env.IMAGE_TAG
+          docker run -d -p 80:80 $REGISTRY/$REPOSITORY:$IMAGE_TAG
