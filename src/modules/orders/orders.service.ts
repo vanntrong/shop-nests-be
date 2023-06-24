@@ -19,7 +19,10 @@ import { User } from '@/entities/user/user.entity';
 import { pointToMoney } from '@/utils/helper';
 import { Promotion } from '@/entities/promotion/promotion.entity';
 import { PromotionsService } from '../promotions/promotions.service';
-import { TWO_MILLIONS_VND } from '@/configs/money';
+import { ONE_MILLION_VND, TWO_MILLIONS_VND } from '@/configs/money';
+import { numberToCurrency } from '@/utils/currency';
+import { Cart } from '@/entities/cart/cart.entity';
+import { CartProduct } from '@/entities/cartProduct/cartProduct.entity';
 
 @Injectable()
 export class OrdersService {
@@ -40,28 +43,53 @@ export class OrdersService {
     @InjectRepository(Promotion)
     private readonly promotionRepository: Repository<Promotion>,
 
+    @InjectRepository(Cart) private readonly cartRepository: Repository<Cart>,
+
+    @InjectRepository(CartProduct)
+    private readonly cartProductRepository: Repository<CartProduct>,
+
     private readonly shipService: ShipService,
     private readonly promotionService: PromotionsService,
   ) {
     this.logger = new Logger(OrdersService.name);
   }
 
+  /**
+   * This function creates an order, calculates the total value, applies promotions and points, saves
+   * the order and its products, and creates a shipping order.
+   * @param {CreateOrderDto} body - The request body containing information about the order to be
+   * created, including the customer's name, phone number, address, email, note, and a list of products
+   * with their quantities.
+   * @param {string} [userId] - The `userId` parameter is an optional string parameter that represents
+   * the ID of the user who is creating the order. If this parameter is provided, the function will
+   * perform additional operations related to the user's points and promotions. If it is not provided,
+   * these operations will be skipped.
+   * @returns an object with the `products` and `order` properties of the `shipOrderBody` object.
+   *
+   * Business logic:
+   * - If user buy more than 2 millions VND, the order will be free ship.
+   * - Otherwise, fee ship is 30.000 VND.
+   * - If user use point, the point will be reduced and the value of order will be reduced. - 1 point = 1000 VND.
+   * - The minimum point user can use is 20 point
+   * - If user use promotion reduce money, the value of order will be reduced. Maximum reduce money is 1 million VND.
+   * - If user use promotion free ship and the value of order is less than 2 millions VND, the order will be free ship.
+   * - If user buy more than 1 million VND, the user will earn 10 point - 10 point = 10.000 VND.
+   */
   async create(body: CreateOrderDto, userId?: string) {
     try {
       let totalValue = 0; // total value of order
-      let totalWeight = 0; // total weight of order
       let actualValue = 0; // value after user used point or apply promotion
       let pointUsed: number | null = null; // point used in order
       let pointEarned: number | null = null; // point earned after order
       let isFreeShip = false; // check if order is free ship
       let promotionUsed: Promotion | null = null; // promotion used in order
+      let cart: Cart = null;
 
       const { products } = await this.$validateProducts(body.products);
 
       products.forEach((product, index) => {
         const productPrice = this.$checkProductPrice(product);
 
-        totalWeight += product.weight * body.products[index].quantity;
         totalValue += productPrice * body.products[index].quantity;
         actualValue += productPrice * body.products[index].quantity;
       });
@@ -81,6 +109,13 @@ export class OrdersService {
 
         const userPointEarned = await this.$addPointForUser(userId, totalValue);
         pointEarned = userPointEarned.pointEarned;
+        cart = await this.cartRepository.findOne({
+          where: {
+            user: {
+              id: userId,
+            },
+          },
+        });
       }
 
       if (body.promotionCode) {
@@ -101,17 +136,6 @@ export class OrdersService {
         isFreeShip = true;
       }
 
-      const feeShip = await this.shipService.getFee({
-        address: body.address,
-        district: body.district,
-        province: body.province,
-        street: body.street,
-        value: actualValue.toString(),
-        ward: body.ward,
-        weight: totalWeight.toString(),
-        deliver_option: body.deliver_option,
-      });
-
       const order = await this.orderRepository.save({
         name: body.name,
         phone: body.phone,
@@ -121,7 +145,7 @@ export class OrdersService {
         note: body.note,
         province: body.province,
         ward: body.ward,
-        feeShip: feeShip.data.fee,
+        feeShip: isFreeShip ? 0 : numberToCurrency(30, 'thousand'),
         pointUsed,
         value: totalValue,
         actualValue,
@@ -163,8 +187,8 @@ export class OrdersService {
           district: order.district,
           ward: order.ward,
           hamlet: 'Khác',
-          is_freeship: isFreeShip ? 1 : 0,
-          pick_money: order.actualValue,
+          is_freeship: 1,
+          pick_money: order.actualValue + order.feeShip,
           value: order.value,
           transport: 'road',
           deliver_option: 'none',
@@ -173,6 +197,15 @@ export class OrdersService {
       };
 
       // const res: any = await this.shipService.createOrder(shipOrderBody);
+
+      if (cart) {
+        this.cartProductRepository
+          .createQueryBuilder('cartProduct')
+          .delete()
+          .from(CartProduct)
+          .where('cartId = :cartId', { cartId: cart.id })
+          .execute();
+      }
 
       return {
         ...shipOrderBody,
@@ -260,24 +293,52 @@ export class OrdersService {
     }
   }
 
+  async countPoint(total: number) {
+    try {
+      if (!total || total < ONE_MILLION_VND)
+        return {
+          message: 'Successful',
+          data: {
+            pointEarned: 0,
+          },
+        };
+
+      const pointEarned = Number((total / ONE_MILLION_VND).toFixed(1)) * 10;
+
+      return {
+        message: 'Successful',
+        data: {
+          pointEarned,
+        },
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
   async $addPointForUser(userId: string, totalValue: number) {
     try {
       const userPointEarned = {
         pointEarned: null,
       };
 
-      if (totalValue < TWO_MILLIONS_VND) return userPointEarned;
+      const {
+        data: { pointEarned },
+      } = await this.countPoint(totalValue);
+
+      if (pointEarned === 0) return userPointEarned;
 
       await this.userRepository.update(
         {
           id: userId,
         },
         {
-          point: () => `point + ${30}`,
+          point: () => `point + ${pointEarned}`,
         },
       );
 
-      userPointEarned.pointEarned = 30;
+      userPointEarned.pointEarned = pointEarned;
 
       return userPointEarned;
     } catch (error) {

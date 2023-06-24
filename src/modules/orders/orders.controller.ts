@@ -34,6 +34,11 @@ export class OrdersController {
     return this.ordersService.findAll(query, filter);
   }
 
+  @Get('count-point')
+  async countPoint(@Query('total') total: number) {
+    return this.ordersService.countPoint(total);
+  }
+
   @HttpCode(HttpStatus.OK)
   @Post('updateShipment')
   async updateShipment(@Body() body: UpdateShipmentDto) {

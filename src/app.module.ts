@@ -19,6 +19,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { StatsModule } from './modules/stats/stats.module';
 import { CommonModule } from './modules/common/common.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
+import { ProvinceModule } from './modules/province/province.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { PromotionsModule } from './modules/promotions/promotions.module';
     StatsModule,
     CommonModule,
     PromotionsModule,
+    ProvinceModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),

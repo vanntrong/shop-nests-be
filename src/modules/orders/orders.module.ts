@@ -10,13 +10,23 @@ import { ShipModule } from '../ship/ship.module';
 import { User } from '@/entities/user/user.entity';
 import { Promotion } from '@/entities/promotion/promotion.entity';
 import { PromotionsModule } from '../promotions/promotions.module';
+import { Cart } from '@/entities/cart/cart.entity';
+import { CartProduct } from '@/entities/cartProduct/cartProduct.entity';
 
 @Module({
   controllers: [OrdersController],
   providers: [AccessTokenStrategy, OrdersService],
   exports: [OrdersService],
   imports: [
-    TypeOrmModule.forFeature([Product, Order, OrderProduct, User, Promotion]),
+    TypeOrmModule.forFeature([
+      Product,
+      Order,
+      OrderProduct,
+      User,
+      Promotion,
+      Cart,
+      CartProduct,
+    ]),
     ShipModule,
     PromotionsModule,
   ],

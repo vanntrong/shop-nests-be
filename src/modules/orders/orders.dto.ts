@@ -39,10 +39,6 @@ export class CreateOrderDto {
 
   @IsString()
   @IsNotEmpty()
-  street: string;
-
-  @IsString()
-  @IsNotEmpty()
   address: string;
 
   @IsString()
