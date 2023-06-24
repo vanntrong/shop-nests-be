@@ -5,6 +5,7 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install
 COPY . .
+RUN yarn build
 
 FROM base as branch-dev
 ENV ENV_NAME=":dev"
@@ -19,7 +20,8 @@ ENV ENV_NAME=":prod"
 ENV NODE_ENV="production"
 
 FROM branch-${SCRIPT_NAME} as final
-RUN yarn build
+RUN rm -rf node_modules
+RUN yarn install --production
 CMD yarn start${ENV_NAME}
 
 # FROM node:16.18.0 as build

@@ -1,0 +1,83 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: ['main']
+
+env:
+  ECR_REGION: aws-region-1
+  DOCKER_BUILDKIT: 1
+  DOCKER_CONTAINER_NAME: shop-nests
+  DOCKER_PORT: 80
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: DerYeger/yarn-setup-action@master
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: yarn
+      - name: Run tests
+        run: yarn test
+
+  build-and-push-image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: $ECR_REGION
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build the Docker image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: shop-nests
+          IMAGE_TAG: ${{ github.sha }}
+        run:
+          docker build . --tag $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg SCRIPT_NAME=prod
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+  pull-and-run:
+    runs-on: self-hosted
+    needs: build-and-push-image
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: $ECR_REGION
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Pull Docker image from ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: shop-nests
+          IMAGE_TAG: ${{ github.sha }}
+        run: docker pull $REGISTRY/$env.ECR_REPOSITORY:$env.IMAGE_TAG
+
+      - name: Stop Docker container
+        run: docker stop $DOCKER_CONTAINER_NAME || true
+
+      - name: Run Docker container
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: shop-nests
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker run -d -p 80:80 $REGISTRY/$env.ECR_REPOSITORY:$env.IMAGE_TAG
