@@ -1,4 +1,5 @@
 import configuration from '@/configs/configuration';
+import { Cart } from '@/entities/cart/cart.entity';
 import { User } from '@/entities/user/user.entity';
 import { $toUserResponse } from '@/utils/mongo';
 import {
@@ -24,6 +25,7 @@ export class AuthService {
   logger: Logger;
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Cart) private readonly cartRepository: Repository<Cart>,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly mailService: MailService,
@@ -64,7 +66,7 @@ export class AuthService {
         }),
       };
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -96,13 +98,28 @@ export class AuthService {
 
       const user = await this.userRepository.save({
         ...body,
-        role: 'user',
+        name: body.username,
+        roles: ['user'],
         password: this.$hashPassword(body.password),
       });
 
-      const tokenVerifyAccount = this.$signTokenVerifyAccount({
-        email: user.email,
+      const cart = await this.cartRepository.findOne({
+        where: {
+          user: {
+            id: user.id,
+          },
+        },
       });
+
+      if (!cart) {
+        this.cartRepository.save({
+          user,
+          products: [],
+        });
+      }
+      // const tokenVerifyAccount = this.$signTokenVerifyAccount({
+      //   email: user.email,
+      // });
 
       // this.mailService.sendMailRegisterAccount({
       //   email: user.email,
@@ -116,10 +133,11 @@ export class AuthService {
         tokens: this.$signTokens({
           email: user.email,
           id: user.id,
-          roles: [user.role],
+          roles: user.roles,
         }),
       };
     } catch (error) {
+      this.logger.error(error);
       throw error;
     }
   }

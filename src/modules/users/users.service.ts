@@ -6,16 +6,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcryptjs from 'bcryptjs';
 import { readFile } from 'fs';
 import slugify from 'slugify';
-import { Repository } from 'typeorm';
-import { UpdateUserDto } from './users.dto';
+import { Brackets, Repository } from 'typeorm';
+import { CreateUserDto, UpdateUserDto } from './users.dto';
 import { UserErrorMessage } from './users.errorMessage';
 import { GetUserByIdOptions } from './users.interface';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class UserService {
   logger: Logger;
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly authService: AuthService,
   ) {
     this.logger = new Logger(UserService.name);
   }
@@ -26,9 +28,13 @@ export class UserService {
       const { keyword = '', ..._filter } = filter;
       const [users, count] = await this.userRepository
         .createQueryBuilder('user')
-        .where({ ..._filter, isDeleted: false })
-        .andWhere('user.first_name ILIKE :keyword', { keyword: `%${keyword}%` })
-        .orWhere('user.last_name ILIKE :keyword', { keyword: `%${keyword}%` })
+        .where(
+          new Brackets((subQb) => {
+            subQb.where('user.name ILIKE :keyword', {
+              keyword: `%${keyword}%`,
+            });
+          }),
+        )
         .skip(offset)
         .take(limit)
         .orderBy(
@@ -53,13 +59,32 @@ export class UserService {
     }
   }
 
+  async create(body: CreateUserDto) {
+    try {
+      const hashPassword = this.authService.$hashPassword(body.password);
+
+      const user = await this.userRepository.save({
+        ...body,
+        password: hashPassword,
+      });
+
+      return {
+        message: 'Successful',
+        data: $toUserResponse(user),
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
   async getById(id: string, options: GetUserByIdOptions = {}) {
     const { isBasicInfo = false } = options;
     try {
       const exist = await this.userRepository.findOne({
         where: { id, isDeleted: false },
         ...(isBasicInfo && {
-          select: ['id', 'firstName', 'lastName', 'avatar'],
+          select: ['id', 'avatar'],
         }),
       });
 
@@ -139,6 +164,26 @@ export class UserService {
 
       return;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  async restore(id: string): Promise<void> {
+    try {
+      await this.userRepository
+        .createQueryBuilder('user')
+        .update(User)
+        .set({
+          isDeleted: false,
+          deletedAt: null,
+        })
+        .where('id = :id', { id })
+        .returning('*')
+        .execute();
+
+      return;
+    } catch (error) {
+      this.logger.error(error.message);
       throw error;
     }
   }

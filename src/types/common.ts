@@ -9,12 +9,20 @@ export interface UserExtractFromToken {
 import { PaginationDto } from '@/validations/common';
 
 export interface PaginationResult<T> {
+  message?: string;
   offset: number;
   limit: number;
   total: number;
   data: T[];
   hasNext: boolean;
 }
+
+export type ErrorResponse = {
+  message: string;
+  code: number;
+  error: string;
+  detail: string;
+};
 
 export interface Result<T> {
   message: string;
@@ -29,4 +37,5 @@ export type Query = Pick<
 export type Filter = Omit<
   PaginationDto,
   'limit' | 'offset' | 'sortBy' | 'sortOrder'
->;
+> &
+  Record<string, string | number | Array<string>>;

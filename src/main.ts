@@ -9,6 +9,10 @@ async function bootstrap() {
     logger: ['debug', 'log', 'error'],
   });
 
+  app.enableCors({
+    origin: process.env.HOSTS.split(','),
+  });
+
   // pipe
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new AllExceptionsFilter());

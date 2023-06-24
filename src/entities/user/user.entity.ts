@@ -3,13 +3,13 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Category } from '../category/category.entity';
+import { Product } from '../product/product.entity';
+import { Promotion } from '../promotion/promotion.entity';
 
 @Entity()
 export class User {
@@ -20,26 +20,16 @@ export class User {
   id: string;
 
   @Column({
-    name: 'first_name',
+    name: 'name',
+    nullable: true,
   })
-  @Index({
-    fulltext: true,
-  })
-  firstName: string;
-
-  @Column({
-    name: 'last_name',
-  })
-  @Index({
-    fulltext: true,
-  })
-  lastName: string;
+  name: string;
 
   @Column({
     unique: true,
   })
   @Index({
-    fulltext: true,
+    // fulltext: true,
     unique: true,
   })
   email: string;
@@ -73,11 +63,6 @@ export class User {
   point: number;
 
   @Column({
-    default: 0,
-  })
-  coin: number;
-
-  @Column({
     default: false,
     name: 'is_verified',
   })
@@ -94,6 +79,15 @@ export class User {
     default: '{user}',
   })
   roles: string[];
+
+  @OneToMany(() => Promotion, (promotion) => promotion.createdBy)
+  promotionsCreated: Promotion[];
+
+  @OneToMany(() => Category, (category) => category.createdBy)
+  categoriesCreated: Category[];
+
+  @OneToMany(() => Product, (product) => product.createdBy)
+  productsCreated: Product[];
 
   @CreateDateColumn({
     name: 'created_at',

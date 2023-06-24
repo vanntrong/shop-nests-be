@@ -13,10 +13,12 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { Query } from '@nestjs/common/decorators';
-import { CreateAddressDto, UpdateUserDto } from './users.dto';
+import { Patch, Query, UseGuards } from '@nestjs/common/decorators';
+import { CreateUserDto, UpdateUserDto } from './users.dto';
 import { UserErrorMessage } from './users.errorMessage';
 import { UserService } from './users.service';
+import { JwtAuthGuard } from '@/guards/jwt.guard';
+import { User } from '@/decorators';
 
 @Controller('users')
 export class UserController {
@@ -29,40 +31,52 @@ export class UserController {
   }
 
   @Get()
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   getAll(@Query() _query: PaginationDto) {
     const { query, filter } = generateQuery(_query);
     return this.userService.getAll(query, filter);
   }
 
-  @Get('me')
-  getMe(@Headers('x-user-id') userId: string) {
-    return this.userService.getById(userId);
+  @Post()
+  create(@Body() body: CreateUserDto) {
+    return this.userService.create(body);
   }
 
-  @Put(':id')
-  update(
-    @Body() body: UpdateUserDto,
-    @Param('id') id: string,
-    @Headers('x-user-id') userId: string,
-    @Headers('x-user-roles') userRoles: string[],
-  ) {
-    this.$checkAuthorized(userId, id, userRoles);
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  getMe(@User('id') id: string) {
+    return this.userService.getById(id);
+  }
+
+  @Put('me')
+  @UseGuards(JwtAuthGuard)
+  updateMe(@User('id') id: string, @Body() body: UpdateUserDto) {
     return this.userService.update(id, body);
   }
 
+  @Put(':id')
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  update(@Body() body: UpdateUserDto, @Param('id') id: string) {
+    return this.userService.update(id, body);
+  }
+
+  @Patch(':id/restore')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  restore(@Param('id') id: string) {
+    return this.userService.restore(id);
+  }
+
   @Get(':id')
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
   getById(@Param('id') id: string) {
-    return this.userService.getById(id, { isBasicInfo: true });
+    return this.userService.getById(id);
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  delete(
-    @Param('id') id: string,
-    @Headers('x-user-id') userId: string,
-    @Headers('x-user-roles') userRoles: string[],
-  ) {
-    this.$checkAuthorized(userId, id, userRoles);
+  @UseGuards(new JwtAuthGuard({ isPrivateRoute: true }))
+  delete(@Param('id') id: string) {
     return this.userService.delete(id);
   }
 
