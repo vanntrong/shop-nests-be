@@ -34,7 +34,7 @@ jobs:
           REPOSITORY: shop-nests
           IMAGE_TAG: ${{ github.sha }}
         run:
-          docker build . --tag $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg SCRIPT_NAME=prod
+          docker build --tag $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg SCRIPT_NAME=prod .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
   pull-and-run:
