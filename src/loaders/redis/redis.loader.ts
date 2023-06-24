@@ -6,7 +6,9 @@ export class RedisLoader {
   static init() {
     const logger = new Logger('RedisModule');
     const config = configuration();
-    logger.log(`Redis module is loading on ${config.redis.port}...`);
+    logger.log(
+      `Redis module is loading on ${config.redis.host}:${config.redis.port}...`,
+    );
 
     return CacheModule.register({
       isGlobal: true,

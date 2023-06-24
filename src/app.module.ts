@@ -24,7 +24,7 @@ import { ProvinceModule } from './modules/province/province.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '.env.development',
+      envFilePath: `.env.${process.env.NODE_ENV ?? 'development'}`,
       isGlobal: true,
       load: [configuration],
     }),

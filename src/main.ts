@@ -10,7 +10,7 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: ['http://localhost:8889', 'http://localhost:3000'],
+    origin: process.env.HOSTS.split(','),
   });
 
   // pipe
