@@ -29,7 +29,7 @@ export class User {
     unique: true,
   })
   @Index({
-    fulltext: true,
+    // fulltext: true,
     unique: true,
   })
   email: string;

@@ -67,7 +67,6 @@ export class UpdateProductDto {
   thumbnailUrl: string;
 
   @IsNumber()
-  @IsNotEmpty()
   @IsOptional()
   price: number;
 
@@ -81,8 +80,7 @@ export class UpdateProductDto {
   @IsOptional()
   categoryId: string;
 
-  @IsNumber()
-  @IsOptional()
+  @IsNumberString()
   @IsOptional()
   salePrice: number;
 

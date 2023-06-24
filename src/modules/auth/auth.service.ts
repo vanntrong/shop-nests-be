@@ -98,13 +98,25 @@ export class AuthService {
 
       const user = await this.userRepository.save({
         ...body,
-        roles: ['admin'],
+        name: body.username,
+        roles: ['user'],
         password: this.$hashPassword(body.password),
       });
 
-      this.cartRepository.save({
-        user,
+      const cart = await this.cartRepository.findOne({
+        where: {
+          user: {
+            id: user.id,
+          },
+        },
       });
+
+      if (!cart) {
+        this.cartRepository.save({
+          user,
+          products: [],
+        });
+      }
       // const tokenVerifyAccount = this.$signTokenVerifyAccount({
       //   email: user.email,
       // });
@@ -125,6 +137,7 @@ export class AuthService {
         }),
       };
     } catch (error) {
+      this.logger.error(error);
       throw error;
     }
   }

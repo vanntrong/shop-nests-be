@@ -1,12 +1,12 @@
 import { Cart } from '@/entities/cart/cart.entity';
+import { CartProduct } from '@/entities/cartProduct/cartProduct.entity';
+import { Product } from '@/entities/product/product.entity';
 import { User } from '@/entities/user/user.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { isNil, omit } from 'lodash';
 import { Repository } from 'typeorm';
 import { UpdateCartDto } from './cart.dto';
-import { Product } from '@/entities/product/product.entity';
-import { CartProduct } from '@/entities/cartProduct/cartProduct.entity';
-import { isNil, isNull, omit, omitBy } from 'lodash';
 
 @Injectable()
 export class CartService {
@@ -167,6 +167,9 @@ export class CartService {
           price: cartProduct.product.price,
           thumbnailUrl: cartProduct.product.thumbnailUrl,
           slug: cartProduct.product.slug,
+          inventory: cartProduct.product.inventory,
+          salePrice: cartProduct.product.salePrice,
+          saleEndAt: cartProduct.product.saleEndAt,
         };
       }),
     };
