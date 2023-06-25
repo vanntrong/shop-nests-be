@@ -2,3 +2,4 @@
 data.json
 provinceData.json
 /dist
+.env.local
