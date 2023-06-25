@@ -20,4 +20,4 @@ services:
       - db_network
 
 networks:
-  db_network: {}
+  db_network: { driver: bridge }

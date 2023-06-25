@@ -22,7 +22,9 @@ ENV NODE_ENV="production"
 FROM branch-${SCRIPT_NAME} as final
 RUN rm -rf node_modules
 RUN yarn install --production
-CMD yarn start${ENV_NAME}
+# CMD yarn start${ENV_NAME}
+CMD ["node", "dist/main"]
+
 
 # FROM node:16.18.0 as build
 # WORKDIR /app
@@ -35,4 +37,3 @@ CMD yarn start${ENV_NAME}
 # WORKDIR /app
 # COPY --from=build /app/dist ./dist
 # COPY --from=base /app/node_modules ./node_modules
-# CMD ["node", "dist/main"]
