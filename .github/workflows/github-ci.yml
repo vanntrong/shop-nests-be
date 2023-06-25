@@ -66,4 +66,7 @@ jobs:
           REPOSITORY: shop-nests
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker run -d -p 8080:80 --network shope-nest_db_network $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker run -d -p 8080:80 --network shope-nest_db_network --name $DOCKER_CONTAINER_NAME $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Remove Docker image
+        run: docker image rm $REGISTRY/$REPOSITORY:$IMAGE_TAG
