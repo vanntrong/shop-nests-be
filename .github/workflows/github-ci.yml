@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: ['develop']
+    branches: ['main']
 
 env:
   ECR_REGION: ap-southeast-1
@@ -66,4 +66,4 @@ jobs:
           REPOSITORY: shop-nests
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker run -d -p 80:80 --network shope-nest_db_network $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker run -d -p 8080:80 --network shope-nest_db_network $REGISTRY/$REPOSITORY:$IMAGE_TAG
