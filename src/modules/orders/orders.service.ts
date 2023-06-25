@@ -293,6 +293,47 @@ export class OrdersService {
     }
   }
 
+  async findMyOrders(_query: Query, _filter: Filter, userId: string) {
+    try {
+      const {
+        offset = 0,
+        limit = 10,
+        sortBy = 'createdAt',
+        sortOrder = 'asc',
+      } = _query;
+      const [orders, count] = await this.orderRepository
+        .createQueryBuilder('order')
+        .where('order.userId = :userId', { userId })
+        .leftJoinAndSelect('order.orderProducts', 'orderProduct')
+        .leftJoinAndSelect('orderProduct.product', 'product')
+        .skip(offset)
+        .take(limit)
+        .orderBy(`order.${sortBy}`, sortOrder === 'asc' ? 'ASC' : 'DESC')
+        .select([
+          'order',
+          'orderProduct',
+          'product.id',
+          'product.name',
+          'product.thumbnailUrl',
+        ])
+        .getManyAndCount();
+
+      this.logger.log('fetch orders: ', JSON.stringify(_query));
+
+      return {
+        message: 'Successful',
+        offset,
+        limit,
+        total: count,
+        hasNext: count > offset + limit,
+        data: orders,
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
   async countPoint(total: number) {
     try {
       if (!total || total < ONE_MILLION_VND)
