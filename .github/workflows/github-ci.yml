@@ -57,8 +57,8 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
-      - name: Stop Docker container
-        run: docker stop $DOCKER_CONTAINER_NAME || true
+      - name: Stop and Remove Docker container
+        run: docker stop $DOCKER_CONTAINER_NAME || true && docker rm $DOCKER_CONTAINER_NAME || true
 
       - name: Run Docker container
         env:
