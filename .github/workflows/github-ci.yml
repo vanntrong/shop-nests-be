@@ -60,9 +60,6 @@ jobs:
       - name: Stop Docker container
         run: docker stop $DOCKER_CONTAINER_NAME || true
 
-      - name: Remove Docker image
-        run: docker image prune -a -f
-
       - name: Run Docker container
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -70,3 +67,6 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker run -d -p 8080:80 --network shope-nest_db_network --name $DOCKER_CONTAINER_NAME $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Remove Docker image
+        run: docker image prune -a -f
