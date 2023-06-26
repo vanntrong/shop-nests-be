@@ -108,6 +108,12 @@ export class Order {
   @OneToMany(() => OrderProduct, (orderProduct) => orderProduct.order)
   orderProducts: OrderProduct[];
 
+  @Column({
+    name: 'user_id',
+    nullable: true,
+  })
+  userId: string;
+
   @CreateDateColumn({
     name: 'created_at',
   })

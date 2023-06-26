@@ -34,6 +34,16 @@ export class OrdersController {
     return this.ordersService.findAll(query, filter);
   }
 
+  @Get('my-orders')
+  @UseGuards(JwtAuthGuard)
+  async findMyOrders(
+    @Query() _query: PaginationDto,
+    @User('id') userId: string,
+  ) {
+    const { query, filter } = generateQuery(_query);
+    return this.ordersService.findMyOrders(query, filter, userId);
+  }
+
   @Get('count-point')
   async countPoint(@Query('total') total: number) {
     return this.ordersService.countPoint(total);
