@@ -19,13 +19,18 @@ export default () => ({
     mail_token_secret: process.env.USER_MAILTOKEN_SECRET,
     mail_token_expires_in: +process.env.USER_MAILTOKEN_EXPIRES_IN,
   },
-  rabbitmq: {
-    url: `amqp://${process.env.USER_RABBITMQ_HOST}:${process.env.USER_RABBITMQ_PORT}`,
-    mail_queue: process.env.MAIL_RABBITMQ_NAME,
-    user_queue: process.env.USER_RABBITMQ_NAME,
-  },
+
   aws: {
     accessKeyId: process.env.USER_AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.USER_AWS_ACCESS_KEY_SECRET,
+  },
+  mail: {
+    host: process.env.USER_MAIL_HOST,
+    port: parseInt(process.env.USER_MAIL_PORT, 10) || 533,
+    secure: false,
+    auth: {
+      user: process.env.USER_MAIL_AUTH_USER,
+      pass: process.env.USER_MAIL_AUTH_PASS,
+    },
   },
 });

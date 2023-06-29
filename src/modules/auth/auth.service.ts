@@ -117,15 +117,8 @@ export class AuthService {
           products: [],
         });
       }
-      // const tokenVerifyAccount = this.$signTokenVerifyAccount({
-      //   email: user.email,
-      // });
 
-      // this.mailService.sendMailRegisterAccount({
-      //   email: user.email,
-      //   name: user.firstName + ' ' + user.lastName,
-      //   token: tokenVerifyAccount,
-      // });
+      this.mailService.sendMailRegister(user.name, user.email);
 
       return {
         message: 'Registration successful',
@@ -138,6 +131,19 @@ export class AuthService {
       };
     } catch (error) {
       this.logger.error(error);
+      throw error;
+    }
+  }
+
+  async logout(userId: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+      });
+
+      this.cacheManager.del(user.email);
+    } catch (error) {
+      this.logger.error(error.message);
       throw error;
     }
   }
