@@ -50,12 +50,26 @@ export class ProductsService {
       const { offset = 0, limit = 10, sortBy, sortOrder } = query;
       const { keyword = '', ..._filter } = filter;
 
+      console.log(keyword);
+
       const queryBuilder = this.productRepository
         .createQueryBuilder('product')
         .leftJoinAndSelect('product.category', 'category')
         .leftJoin('category.parentCategory', 'parentCategory')
         .leftJoinAndSelect('product.createdBy', 'createdBy')
         .where(
+          new Brackets((subQb) => {
+            subQb
+              .where('product.name ILIKE :keyword', {
+                keyword: `%${keyword}%`,
+              })
+              .orWhere('product.slug ILIKE :keyword', {
+                keyword: `%${keyword}%`,
+              });
+          }),
+        )
+
+        .andWhere(
           new Brackets((qb) => {
             if (!isAdminQuery) {
               qb.andWhere({
@@ -67,17 +81,7 @@ export class ProductsService {
             }
           }),
         )
-        .andWhere(
-          new Brackets((subQb) => {
-            subQb
-              .where('product.name ILIKE :keyword', {
-                keyword: `%${keyword}%`,
-              })
-              .orWhere('product.slug ILIKE :keyword', {
-                keyword: `%${keyword}%`,
-              });
-          }),
-        )
+
         .skip(offset)
         .take(limit)
         .select(['product', 'category', 'createdBy.name'])

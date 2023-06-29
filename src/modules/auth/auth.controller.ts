@@ -1,8 +1,16 @@
 import { User } from '@/decorators';
 import { UserExtractFromToken } from '@/types/common';
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthLoginDto, AuthRegisterDto, AuthVerifyDto } from './auth.dto';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from '@/guards/jwt.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -16,6 +24,13 @@ export class AuthController {
   @Post('register')
   async register(@Body() body: AuthRegisterDto) {
     return this.authService.register(body);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  async logout(@User('id') userId: string) {
+    return this.authService.logout(userId);
   }
 
   @Post('verify')

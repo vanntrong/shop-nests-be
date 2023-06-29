@@ -33,11 +33,14 @@ export class Product {
     unique: true,
     name: 'name',
   })
-  name: string;
-
   @Index({
     fulltext: true,
   })
+  name: string;
+
+  // @Index({
+  //   fulltext: true,
+  // })
   @Column({
     unique: true,
     name: 'slug',
