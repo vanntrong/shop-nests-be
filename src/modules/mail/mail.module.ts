@@ -4,6 +4,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import configuration from '@/configs/configuration';
 import { join } from 'path';
+import { numberToVND } from '@/utils/currency';
 
 @Global()
 @Module({
@@ -24,11 +25,14 @@ import { join } from 'path';
           },
           template: {
             dir: join(__dirname, 'templates'),
-            adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
+            adapter: new HandlebarsAdapter({
+              formatCurrencyVND: numberToVND,
+            }), // or new PugAdapter() or new EjsAdapter()
             options: {
               strict: true,
             },
           },
+          options: {},
         };
       },
     }),

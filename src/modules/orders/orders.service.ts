@@ -23,6 +23,7 @@ import { ONE_MILLION_VND, TWO_MILLIONS_VND } from '@/configs/money';
 import { numberToCurrency } from '@/utils/currency';
 import { Cart } from '@/entities/cart/cart.entity';
 import { CartProduct } from '@/entities/cartProduct/cartProduct.entity';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class OrdersService {
@@ -50,6 +51,7 @@ export class OrdersService {
 
     private readonly shipService: ShipService,
     private readonly promotionService: PromotionsService,
+    private readonly mailService: MailService,
   ) {
     this.logger = new Logger(OrdersService.name);
   }
@@ -197,6 +199,26 @@ export class OrdersService {
       };
 
       // const res: any = await this.shipService.createOrder(shipOrderBody);
+
+      this.mailService.sendMailOrderSuccess(
+        order.name,
+        order.email,
+        orderProducts,
+      );
+
+      this.mailService.sendMailOrderSuccessAdmin(
+        order.name,
+        order.email,
+        order.address +
+          ', ' +
+          order.ward +
+          ', ' +
+          order.district +
+          ', ' +
+          order.province,
+        order.phone,
+        orderProducts,
+      );
 
       if (cart) {
         this.cartProductRepository

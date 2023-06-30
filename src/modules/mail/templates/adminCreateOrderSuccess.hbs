@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+      background-color: #f7f7f7;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #333;
+      margin: 0 0 20px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #555;
+      margin: 0 0 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+
+    .button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Thông báo đơn hàng mới</h1>
+    <p>Xin chào [Admin Name],</p>
+    <p>Một đơn đặt hàng mới đã được đặt bởi một người dùng. Sau đây là chi tiết đơn hàng:</p>
+    <p><strong>Chi tiết người dùng:</strong></p>
+    <ul>
+      <li><strong>Tên:</strong> {{name}}</li>
+      <li><strong>Email:</strong> {{email}}</li>
+      <li><strong>Số điện thoại:</strong> {{phone}}</li>
+      <li><strong>Địa chỉ:</strong> {{address}}</li>
+    </ul>
+    <p><strong>Tóm tắt đơn hàng:</strong></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tên mặt hàng</th>
+          <th>Hình ảnh</th>
+          <th>Giá</th>
+          <th>Số lượng</th>
+          <th>Tổng tiền</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each products}}
+        <tr>
+          <td>{{product.name}}</td>
+          <td><img src={{product.thumbnailUrl}} alt="Product 1" width="50" height="50"></td>
+          <td>{{price}}</td>
+          <td>{{quantity}}</td>
+            <td>{{formatCurrencyVND total}}</td>
+        </tr>
+        {{/each}}
+        
+        <!-- Add more rows for additional products -->
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4">Tổng cộng:</td>
+          <td>{{formatCurrencyVND total}}</td>
+        </tr>
+      </tfoot>
+    </table>
+    <p>Vui lòng thực hiện các hành động cần thiết để xử lý đơn đặt hàng và đáp ứng yêu cầu của người dùng.</p>
+    <p>Cảm ơn.</p>
+    <p>Trân Trọng,<br>Vo Van Trong<br>CEO Yến Sào Khánh Hoà</p>
+  </div>
+</body>
+</html>

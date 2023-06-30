@@ -13,3 +13,4 @@ export const constants = {
 };
 
 export const A_MONTH_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000;
+export const ADMIN_EMAIL = '6151071109@st.utc2.edu.vn';

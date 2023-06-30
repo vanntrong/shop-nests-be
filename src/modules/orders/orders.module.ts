@@ -12,6 +12,7 @@ import { Promotion } from '@/entities/promotion/promotion.entity';
 import { PromotionsModule } from '../promotions/promotions.module';
 import { Cart } from '@/entities/cart/cart.entity';
 import { CartProduct } from '@/entities/cartProduct/cartProduct.entity';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   controllers: [OrdersController],
@@ -29,6 +30,7 @@ import { CartProduct } from '@/entities/cartProduct/cartProduct.entity';
     ]),
     ShipModule,
     PromotionsModule,
+    MailModule,
   ],
 })
 export class OrdersModule {}
