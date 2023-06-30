@@ -3,13 +3,15 @@ import { Product } from '@/entities/product/product.entity';
 import { Filter, PaginationResult, Query, Result } from '@/types/common';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, Not, Repository } from 'typeorm';
 import { CreateProductDto, UpdateProductDto } from './products.dto';
 import { generateSlug } from '@/utils/slug';
 import { ProductErrorMessage } from './products.errorMessage';
 import { CommonService } from '../common/common.service';
 import { User } from '@/entities/user/user.entity';
 import { readFile } from 'fs';
+import { MailService } from '../mail/mail.service';
+import { Order } from '@/entities/order/order.entity';
 
 @Injectable()
 export class ProductsService {
@@ -22,7 +24,11 @@ export class ProductsService {
     private readonly categoryRepository: Repository<Category>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
     private readonly commonService: CommonService,
+
+    private readonly mailService: MailService,
   ) {
     this.logger = new Logger(ProductsService.name);
   }
@@ -282,10 +288,56 @@ export class ProductsService {
         slug,
       });
 
+      if (
+        updatedProduct.salePrice &&
+        updatedProduct.saleEndAt &&
+        new Date(updatedProduct.saleEndAt) > new Date()
+      ) {
+        this.sendMailSalePriceToCustomer(updatedProduct);
+      }
       return {
         message: 'Product updated successfully',
         data: updatedProduct,
       };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async sendMailSalePriceToCustomer(product: Product) {
+    try {
+      return new Promise(async (resolve) => {
+        const customerHaveOrder = await this.orderRepository
+          .createQueryBuilder('order')
+          .leftJoinAndSelect('order.orderProducts', 'orderProducts')
+          .leftJoinAndSelect('orderProducts.product', 'product')
+          .where('product.id = :id', { id: product.id })
+          .andWhere('order.userId IS NOT NULL')
+          .groupBy('order.id, orderProducts.id, product.id, order.userId')
+          .getMany();
+
+        const userSet = new Set<string>();
+
+        customerHaveOrder.forEach((order) => {
+          userSet.add(order.userId);
+        });
+
+        userSet.forEach(async (userId) => {
+          const user = await this.userRepository.findOne({
+            where: { id: userId },
+          });
+
+          if (user) {
+            this.mailService.sendMailSaleProduct(
+              user.name,
+              user.email,
+              product,
+            );
+          }
+        });
+        resolve(true);
+      });
     } catch (error) {
       this.logger.error(error.message);
       throw error;

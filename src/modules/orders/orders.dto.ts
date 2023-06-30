@@ -4,7 +4,6 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
-  IsNumberString,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -79,12 +78,12 @@ export class UpdateShipmentDto {
   @IsString()
   reason: string;
 
-  @IsNumberString({
+  @IsNumber({
     allowNaN: false,
   })
   fee: number;
 
-  @IsNumberString({
+  @IsNumber({
     allowNaN: false,
   })
   status_id: number;

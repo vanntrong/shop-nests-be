@@ -1,6 +1,4 @@
-import { ADMIN_EMAIL } from '@/configs/constants';
-import { OrderProduct } from '@/entities/orderProduct/orderProduct.entity';
-import { numberToVND } from '@/utils/currency';
+import { ADMIN_EMAIL, FE_URL } from '@/configs/constants';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -70,6 +68,19 @@ export class MailService {
         address,
         products,
         total,
+      },
+    });
+  }
+
+  async sendMailSaleProduct(name: string, email: string, product: any) {
+    product.link = FE_URL + '/san-pham/' + product.slug;
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Thông báo giảm giá',
+      template: '../templates/saleProduct',
+      context: {
+        name,
+        product,
       },
     });
   }

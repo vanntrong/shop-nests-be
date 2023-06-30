@@ -4,7 +4,6 @@ import {
   IsDateString,
   IsNotEmpty,
   IsNumber,
-  IsNumberString,
   IsOptional,
   IsString,
   IsUUID,
@@ -15,8 +14,7 @@ export class CreateProductDto {
   @IsNotEmpty()
   thumbnailUrl: string;
 
-  @IsNumberString()
-  @IsNotEmpty()
+  @IsNumber()
   price: number;
 
   @IsString()
@@ -27,7 +25,7 @@ export class CreateProductDto {
   @IsNotEmpty()
   categoryId: string;
 
-  @IsNumberString()
+  @IsNumber()
   @IsOptional()
   salePrice: number;
 
@@ -35,12 +33,10 @@ export class CreateProductDto {
   @IsNotEmpty()
   name: string;
 
-  @IsNumberString()
-  @IsNotEmpty()
+  @IsNumber()
   weight: number;
 
-  @IsNumberString()
-  @IsNotEmpty()
+  @IsNumber()
   inventory: number;
 
   @IsString()
@@ -67,7 +63,6 @@ export class UpdateProductDto {
   thumbnailUrl: string;
 
   @IsNumber()
-  @IsOptional()
   price: number;
 
   @IsString()
@@ -80,12 +75,11 @@ export class UpdateProductDto {
   @IsOptional()
   categoryId: string;
 
-  @IsNumberString()
+  @IsNumber()
   @IsOptional()
   salePrice: number;
 
   @IsNumber()
-  @IsNotEmpty()
   weight: number;
 
   @IsString()

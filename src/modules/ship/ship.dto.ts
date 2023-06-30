@@ -1,10 +1,8 @@
 import {
   IsArray,
-  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
-  IsNumberString,
   IsOptional,
   IsString,
   ValidateNested,
@@ -31,14 +29,13 @@ export class GetFeeShipDto {
   @IsNotEmpty()
   address: string;
 
-  @IsNumberString()
-  @IsNotEmpty()
+  @IsNumber()
   weight: string;
 
   @IsEnum(['xteam', 'none'])
   deliver_option: string;
 
-  @IsNumberString()
+  @IsNumber()
   @IsOptional()
   value: string;
 }

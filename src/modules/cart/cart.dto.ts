@@ -1,7 +1,7 @@
 import {
   IsArray,
   IsNotEmpty,
-  IsNumberString,
+  IsNumber,
   IsUUID,
   ValidateNested,
 } from 'class-validator';
@@ -17,7 +17,6 @@ export class CartProductDto {
   @IsNotEmpty()
   id: string;
 
-  @IsNumberString()
-  @IsNotEmpty()
+  @IsNumber()
   quantity: string;
 }

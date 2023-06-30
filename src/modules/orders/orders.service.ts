@@ -153,6 +153,7 @@ export class OrdersService {
         actualValue,
         pointEarned,
         promotionUsed,
+        userId: userId ? userId : null,
       });
 
       const orderProducts = await Promise.all(
