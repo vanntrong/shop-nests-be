@@ -5,6 +5,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import configuration from '@/configs/configuration';
 import { join } from 'path';
 import { numberToVND } from '@/utils/currency';
+import { checkOrderHasSale, getValueSale } from '@/utils/handleBars';
 
 @Global()
 @Module({
@@ -27,6 +28,8 @@ import { numberToVND } from '@/utils/currency';
             dir: join(__dirname, 'templates'),
             adapter: new HandlebarsAdapter({
               formatCurrencyVND: numberToVND,
+              checkOrderHasSale: checkOrderHasSale,
+              getValueSale: getValueSale,
             }), // or new PugAdapter() or new EjsAdapter()
             options: {
               strict: true,

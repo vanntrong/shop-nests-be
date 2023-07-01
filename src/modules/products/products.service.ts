@@ -56,8 +56,6 @@ export class ProductsService {
       const { offset = 0, limit = 10, sortBy, sortOrder } = query;
       const { keyword = '', ..._filter } = filter;
 
-      console.log(keyword);
-
       const queryBuilder = this.productRepository
         .createQueryBuilder('product')
         .leftJoinAndSelect('product.category', 'category')
