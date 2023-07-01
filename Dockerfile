@@ -20,7 +20,6 @@ ENV ENV_NAME=":prod"
 ENV NODE_ENV="production"
 
 FROM branch-${SCRIPT_NAME} as final
-
 RUN rm -rf node_modules
 RUN yarn install --production
 # CMD yarn start${ENV_NAME}
