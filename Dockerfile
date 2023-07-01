@@ -1,7 +1,4 @@
 ARG SCRIPT_NAME="dev"
-ARG USER_AWS_ACCESS_KEY_ID
-ARG USER_AWS_ACCESS_KEY_SECRET
-
 
 FROM node:16.18.0 as base
 WORKDIR /app
@@ -23,8 +20,7 @@ ENV ENV_NAME=":prod"
 ENV NODE_ENV="production"
 
 FROM branch-${SCRIPT_NAME} as final
-ENV USER_AWS_ACCESS_KEY_ID=${USER_AWS_ACCESS_KEY_ID}
-ENV USER_AWS_ACCESS_KEY_SECRET=${USER_AWS_ACCESS_KEY_SECRET}
+
 RUN rm -rf node_modules
 RUN yarn install --production
 # CMD yarn start${ENV_NAME}

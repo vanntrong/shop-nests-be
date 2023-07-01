@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: ['main']
+    branches: ['develop']
 
 env:
   ECR_REGION: ap-southeast-1
@@ -33,11 +33,8 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: shop-nests
           IMAGE_TAG: ${{ github.sha }}
-        run:
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg SCRIPT_NAME=prod
-          --build-arg USER_AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          --build-arg USER_AWS_ACCESS_KEY_SECRET=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          . && docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+        run: docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          --build-arg SCRIPT_NAME=prod . && docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
   pull-and-run:
     runs-on: self-hosted
@@ -69,8 +66,13 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: shop-nests
           IMAGE_TAG: ${{ github.sha }}
+          USER_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          USER_AWS_ACCESS_KEY_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          USER_MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          USER_MAIL_AUTH_USER: ${{ secrets.MAIL_AUTH_USER }}
+          USER_MAIL_AUTH_PASS: ${{ secrets.MAIL_AUTH_PASS }}
         run: |
-          docker run -d -p 8080:80 --network shope-nest_db_network --name $DOCKER_CONTAINER_NAME $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker run -d -p 8080:80 -e USER_AWS_ACCESS_KEY_ID=$USER_AWS_ACCESS_KEY_ID -e USER_AWS_ACCESS_KEY_SECRET=$USER_AWS_ACCESS_KEY_SECRET -e USER_MAIL_HOST=$USER_MAIL_HOST -e USER_MAIL_AUTH_USER=$USER_MAIL_AUTH_USER -e USER_MAIL_AUTH_PASS=$USER_MAIL_AUTH_PASS --network shope-nest_db_network --name $DOCKER_CONTAINER_NAME $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: Remove Docker image
         run: docker image prune -a -f

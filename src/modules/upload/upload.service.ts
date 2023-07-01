@@ -12,6 +12,7 @@ export class UploadService {
   private logger: Logger;
   constructor() {
     const config = configuration();
+    console.log('aws::: ', config.aws.accessKeyId, config.aws.secretAccessKey);
     this.s3 = new S3Client({
       region: S3_REGION,
       credentials: {
