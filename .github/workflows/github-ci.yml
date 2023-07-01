@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: ['develop']
+    branches: ['main']
 
 env:
   ECR_REGION: ap-southeast-1
