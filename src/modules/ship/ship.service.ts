@@ -58,7 +58,6 @@ export class ShipService {
 
       return response;
     } catch (error) {
-      console.log(error);
       this.logger.error(error);
       throw error;
     }

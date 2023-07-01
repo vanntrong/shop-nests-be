@@ -100,9 +100,20 @@
         <!-- Add more rows for additional products -->
       </tbody>
       <tfoot>
+         <tr>
+          <td colspan="4">Tạm tính:</td>
+          
+          <td>{{formatCurrencyVND totalValue}}</td>
+        </tr>
+        {{#if saleValue}}
+        <tr>
+          <td colspan="4">Giảm giá:</td>
+          <td>{{formatCurrencyVND saleValue}}</td>
+        </tr>
+        {{/if}}
         <tr>
           <td colspan="4">Tổng cộng:</td>
-          <td>{{formatCurrencyVND total}}</td>
+          <td>{{formatCurrencyVND actualValue}}</td>
         </tr>
       </tfoot>
     </table>

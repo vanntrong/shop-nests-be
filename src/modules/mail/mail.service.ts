@@ -20,15 +20,20 @@ export class MailService {
     });
   }
 
-  async sendMailOrderSuccess(name: string, email: string, products: any) {
+  async sendMailOrderSuccess(
+    name: string,
+    email: string,
+    totalValue: number,
+    actualValue: number,
+    products: any,
+  ) {
     products = products.map((product) => ({
       ...product,
       total: product.price * product.quantity,
     }));
 
-    const total = products.reduce((acc, product) => {
-      return acc + product.total;
-    }, 0);
+    const saleValue = totalValue > actualValue ? totalValue - actualValue : 0;
+
     await this.mailerService.sendMail({
       to: email,
       subject: 'Đặt hàng thành công',
@@ -36,7 +41,9 @@ export class MailService {
       context: {
         name,
         products,
-        total,
+        totalValue,
+        actualValue,
+        saleValue,
       },
     });
   }
@@ -46,6 +53,8 @@ export class MailService {
     email: string,
     address: string,
     phone: string,
+    totalValue: number,
+    actualValue: number,
     products: any,
   ) {
     products = products.map((product) => ({
@@ -53,9 +62,7 @@ export class MailService {
       total: product.price * product.quantity,
     }));
 
-    const total = products.reduce((acc, product) => {
-      return acc + product.total;
-    }, 0);
+    const saleValue = totalValue > actualValue ? totalValue - actualValue : 0;
 
     await this.mailerService.sendMail({
       to: ADMIN_EMAIL,
@@ -67,7 +74,9 @@ export class MailService {
         phone,
         address,
         products,
-        total,
+        totalValue,
+        actualValue,
+        saleValue,
       },
     });
   }

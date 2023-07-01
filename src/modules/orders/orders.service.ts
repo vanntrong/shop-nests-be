@@ -204,6 +204,8 @@ export class OrdersService {
       this.mailService.sendMailOrderSuccess(
         order.name,
         order.email,
+        totalValue,
+        actualValue,
         orderProducts,
       );
 
@@ -218,6 +220,8 @@ export class OrdersService {
           ', ' +
           order.province,
         order.phone,
+        totalValue,
+        actualValue,
         orderProducts,
       );
 
