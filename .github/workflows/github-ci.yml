@@ -35,8 +35,6 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run:
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg SCRIPT_NAME=prod
-          --build-arg USER_AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          --build-arg USER_AWS_ACCESS_KEY_SECRET=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           . && docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
   pull-and-run:
