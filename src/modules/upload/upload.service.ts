@@ -12,13 +12,12 @@ export class UploadService {
   private logger: Logger;
   constructor() {
     const config = configuration();
+    console.log('aws::: ', config.aws.accessKeyId, config.aws.secretAccessKey);
     this.s3 = new S3Client({
       region: S3_REGION,
       credentials: {
-        // accessKeyId: config.aws.accessKeyId,
-        accessKeyId: 'AKIAW5JGJE77ITN62XGM',
-        secretAccessKey: '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',
-        // secretAccessKey: config.aws.secretAccessKey,
+        accessKeyId: config.aws.accessKeyId,
+        secretAccessKey: config.aws.secretAccessKey,
       },
     });
     this.logger = new Logger(UploadService.name);
