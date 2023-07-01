@@ -22,7 +22,7 @@ export class UploadService {
     this.logger = new Logger(UploadService.name);
   }
 
-  async uploadFile(file:any, bucket = DEFAULT_BUCKET) {
+  async uploadFile(file: any, bucket = DEFAULT_BUCKET) {
     try {
       const name = getFileName(file.originalname);
       await this.s3.send(
